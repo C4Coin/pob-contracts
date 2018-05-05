@@ -46,7 +46,7 @@ git config user.email "username@domain.suffix"
 
 #### Hotfixes and Support branches
 
-It's basically the same process but use the word `hotfix` or `support` instead of `feature`.  `git flow` knows what to do. Just keep in mind that any changes are going to happen to your fork, and not the upstream repo. If you need to merge a `hotfix` into upstream master you may only do it va a reviewed pull request.
+It's basically the same process but use the word `hotfix` or `support` instead of `feature`.  `git flow` knows what to do. Just keep in mind that any changes are going to happen to your fork, and not the upstream repo. If you need to merge a `hotfix` into upstream master you may only do it via a reviewed pull request.
 
 ### Releasing to production
 
@@ -72,11 +72,11 @@ Note this will creating a feature via `git flow` will create a branch called `fe
 
 ### Commit Messages
 
-When commiting something use the `-m` flag to add a short commit message of the format `{issue number} summary of what you changed`.  So for example if you are working on issue `ABC-1` and you added a method to the `aardvark_controller` you might use the following commit message `"ABC-1 added anteater method to aardvark controller"`
+When committing something use the `-m` flag to add a short commit message of the format `{issue number} summary of what you changed`.  So for example if you are working on issue `ABC-1` and you added a method to the `aardvark_controller` you might use the following commit message `"ABC-1 added anteater method to aardvark controller"`
 
 Commit messages ought to be in the past tense.
 
-In general try to group file changes wherever appropriate, so if your controller change also involved updating something in a helper file, the one commit message can happily encompas the changes to both files. The message ought to reflect the main aim of the change.
+In general try to group file changes wherever appropriate, so if your controller change also involved updating something in a helper file, the one commit message can happily encompass the changes to both files. The message ought to reflect the main aim of the change.
 
 ### Pull Requests
 
