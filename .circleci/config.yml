@@ -43,9 +43,13 @@ jobs:
           name: Javascript Linter
           command: npm run lint:js
 
+      # - run:
+      #     name: Unit tests with code coverage
+      #     command: npm run test:cov
+
       - run:
-          name: Unit tests with code coverage
-          command: npm run test:cov
+          name: Unit tests without code coverage
+          command: npm test
 
       - run:
           name: Push any lockfile changes
