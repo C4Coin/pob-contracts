@@ -14,7 +14,7 @@
 //!
 //! Original code taken from https://github.com/paritytech/contracts
 
-pragma solidity ^0.4.4;
+pragma solidity ^0.4.23;
 
 import "./interfaces/Owned.sol";
 import "./interfaces/ValidatorSet.sol";
@@ -92,7 +92,7 @@ contract OwnedSet is Owned, ValidatorSet {
 	// Log desire to change the current list.
 	function initiateChange() private when_finalized {
 		finalized = false;
-		emit InitiateChange(block.blockhash(block.number - 1), getPending());
+		emit InitiateChange(blockhash(block.number - 1), getPending());
 	}
 
 	function finalizeChange() public only_system_and_not_finalized {

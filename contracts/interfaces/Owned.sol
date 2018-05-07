@@ -14,7 +14,7 @@
 //!
 //! Original code taken from https://github.com/paritytech/contracts
 
-pragma solidity ^0.4.4;
+pragma solidity ^0.4.23;
 
 contract Owned {
 	modifier only_owner { require(msg.sender == owner); _; }

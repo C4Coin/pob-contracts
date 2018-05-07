@@ -14,7 +14,7 @@
 //!
 //! Original code taken from https://github.com/paritytech/contracts
 
-pragma solidity ^0.4.4;
+pragma solidity ^0.4.23;
 
 contract ValidatorSet {
 	/// Issue this log event to signal a desired change in validator set.

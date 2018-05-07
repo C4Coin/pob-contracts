@@ -14,7 +14,7 @@
 //!
 //! Original code taken from https://github.com/paritytech/contracts
 
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.23;
 
 import "./interfaces/ValidatorSet.sol";
 import "./libraries/AddressVotes.sol";

@@ -14,14 +14,14 @@
 //!
 //! Original code taken from https://github.com/paritytech/contracts
 
-pragma solidity ^0.4.4;
+pragma solidity ^0.4.23;
 
 import "./interfaces/ValidatorSet.sol";
 
 // Basic contract used for testing the validator set.
 contract Test is ValidatorSet {
 	// Current active set of validators. Accounts used for testing: "0".sha3() and "1".sha3()
-	address[] public validators = [0x7d577a597b2742b498cb5cf0c26cdcd726d39e6e, 0x82a978b3f5962a5b0957d9ee9eef472ee55b42f1];
+	address[] public validators = [0x007d577a597b2742b498cb5cf0c26cdcd726d39e6e, 0x0082a978b3f5962a5b0957d9ee9eef472ee55b42f1];
 	// Real time set of validators.
 	address[] public pending = validators;
 	// Indices of validators in the pending set.
@@ -44,7 +44,7 @@ contract Test is ValidatorSet {
 	function addValidator(address _validator) public {
 		pending.push(_validator);
 		indices[_validator] = validators.length - 1;
-		emit InitiateChange(block.blockhash(block.number - 1), pending);
+		emit InitiateChange(blockhash(block.number - 1), pending);
 	}
 
 	// Remove a validator from the list.
@@ -53,7 +53,7 @@ contract Test is ValidatorSet {
 		delete indices[_validator];
 		delete pending[pending.length-1];
 		pending.length--;
-		emit InitiateChange(block.blockhash(block.number - 1), pending);
+		emit InitiateChange(blockhash(block.number - 1), pending);
 	}
 
 	function reportBenign(address _validator) public {
