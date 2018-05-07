@@ -1,3 +1,19 @@
+//! Copyright 2017 C4Coin
+//!
+//! Licensed under the Apache License, Version 2.0 (the "License");
+//! you may not use this file except in compliance with the License.
+//! You may obtain a copy of the License at
+//!
+//!     http://www.apache.org/licenses/LICENSE-2.0
+//!
+//! Unless required by applicable law or agreed to in writing, software
+//! distributed under the License is distributed on an "AS IS" BASIS,
+//! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//! See the License for the specific language governing permissions and
+//! limitations under the License.
+//!
+//! Original code taken from https://github.com/paritytech/contracts
+
 pragma solidity ^0.4.4;
 
 contract ValidatorSet {
@@ -30,7 +46,8 @@ contract ValidatorSet {
 	function reportMalicious(address validator, uint256 blockNumber, bytes proof) public;
 }
 
-/* contract SafeValidatorSet is ValidatorSet {
+/*
+contract SafeValidatorSet is ValidatorSet {
 	function reportBenign(address validator, uint256 blockNumber) public {}
 	function reportMalicious(address validator, uint256 blockNumber, bytes proof) public {}
 }
