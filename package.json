@@ -53,5 +53,7 @@
     "url": "https://github.com/c4coin/validator-contracts/issues"
   },
   "homepage": "https://github.com/c4coin/validator-contracts#readme",
-  "dependencies": {}
+  "dependencies": {
+    "openzeppelin-solidity": "1.9.0"
+  }
 }
