@@ -14,7 +14,7 @@
 //!
 //! Original code taken from https://github.com/paritytech/contracts
 
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.4;
 
 import "./interfaces/Owned.sol";
 import "./interfaces/ValidatorSet.sol";
@@ -71,7 +71,7 @@ contract OwnedSet is Owned, ValidatorSet {
 	// Was the last validator change finalized. Implies validators == pending
 	bool public finalized;
 
-	function OwnedSet(address[] _initial) public {
+	constructor(address[] _initial) public {
 		pending = _initial;
 		for (uint i = 0; i < _initial.length - 1; i++) {
 			pendingStatus[_initial[i]].isIn = true;
@@ -92,13 +92,13 @@ contract OwnedSet is Owned, ValidatorSet {
 	// Log desire to change the current list.
 	function initiateChange() private when_finalized {
 		finalized = false;
-		InitiateChange(block.blockhash(block.number - 1), getPending());
+		emit InitiateChange(block.blockhash(block.number - 1), getPending());
 	}
 
 	function finalizeChange() public only_system_and_not_finalized {
 		validators = pending;
 		finalized = true;
-		ChangeFinalized(getValidators());
+		emit ChangeFinalized(getValidators());
 	}
 
 	// OWNER FUNCTIONS
@@ -130,11 +130,11 @@ contract OwnedSet is Owned, ValidatorSet {
 
 	// Called when a validator should be removed.
 	function reportMalicious(address _validator, uint _blockNumber, bytes _proof) public only_owner is_recent(_blockNumber) {
-		Report(msg.sender, _validator, true);
+		emit Report(msg.sender, _validator, true);
 	}
 
 	// Report that a validator has misbehaved in a benign way.
 	function reportBenign(address _validator, uint _blockNumber) public only_owner is_validator(_validator) is_recent(_blockNumber) {
-		Report(msg.sender, _validator, false);
+		emit Report(msg.sender, _validator, false);
 	}
 }

@@ -61,7 +61,7 @@ contract InnerMajoritySet is InnerSet {
 	// Current list of addresses entitled to participate in the consensus.
 	address[] public validatorsList;
 	// Pending list of validator addresses.
-	address[] pendingList = [0xf5777f8133aae2734396ab1d43ca54ad11bfb737];
+	address[] pendingList = [0x00f5777f8133aae2734396ab1d43ca54ad11bfb737];
 	// Tracker of status for each address.
 	mapping(address => ValidatorStatus) validatorsStatus;
 
@@ -69,7 +69,7 @@ contract InnerMajoritySet is InnerSet {
 	AddressVotes.Data initialSupport;
 
 	// Each validator is initially supported by all others.
-	function InnerMajoritySet() public {
+	constructor() public {
 		initialSupport.count = pendingList.length;
 		for (uint i = 0; i < pendingList.length; i++) {
 			address supporter = pendingList[i];
@@ -96,13 +96,13 @@ contract InnerMajoritySet is InnerSet {
 
 	// Log desire to change the current list.
 	function initiateChange() private {
-		outerSet.initiateChange(block.blockhash(block.number - 1), pendingList);
-		InitiateChange(block.blockhash(block.number - 1), pendingList);
+		outerSet.initiateChange(blockhash(block.number - 1), pendingList);
+		emit InitiateChange(blockhash(block.number - 1), pendingList);
 	}
 
 	function finalizeChange() public only_outer {
 		validatorsList = pendingList;
-		ChangeFinalized(validatorsList);
+		emit ChangeFinalized(validatorsList);
 	}
 
 	// SUPPORT LOOKUP AND MANIPULATION
@@ -122,13 +122,13 @@ contract InnerMajoritySet is InnerSet {
 		AddressVotes.insert(validatorsStatus[validator].support, msg.sender);
 		validatorsStatus[msg.sender].supported.push(validator);
 		addValidator(validator);
-		Support(msg.sender, validator, true);
+		emit Support(msg.sender, validator, true);
 	}
 
 	// Remove support for a validator.
 	function removeSupport(address sender, address validator) private {
 		require(AddressVotes.remove(validatorsStatus[validator].support, sender));
-		Support(sender, validator, false);
+		emit Support(sender, validator, false);
 		// Remove validator from the list if there is not enough support.
 		removeValidator(validator);
 	}
@@ -138,7 +138,7 @@ contract InnerMajoritySet is InnerSet {
 	// Called when a validator should be removed.
 	function reportMalicious(address validator, uint blockNumber, bytes proof) public only_validator is_recent(blockNumber) {
 		removeSupport(msg.sender, validator);
-		Report(msg.sender, validator, true);
+		emit Report(msg.sender, validator, true);
 	}
 
 	// BENIGN MISBEHAVIOUR HANDLING
@@ -147,7 +147,7 @@ contract InnerMajoritySet is InnerSet {
 	function reportBenign(address validator, uint blockNumber) public only_validator is_validator(validator) is_recent(blockNumber) {
 		firstBenign(validator);
 		repeatedBenign(validator);
-		Report(msg.sender, validator, false);
+		emit Report(msg.sender, validator, false);
 	}
 
 	// Find the total number of repeated misbehaviour votes.

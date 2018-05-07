@@ -72,7 +72,7 @@ contract MajoritySet is ValidatorSet {
 	AddressVotes.Data initialSupport;
 
 	// Each validator is initially supported by all others.
-	function MajoritySet() public {
+	constructor() public {
 		pendingList.push(0xf5777f8133aae2734396ab1d43ca54ad11bfb737);
 
 		initialSupport.count = pendingList.length;
@@ -102,13 +102,13 @@ contract MajoritySet is ValidatorSet {
 	// Log desire to change the current list.
 	function initiateChange() private when_finalized {
 		finalized = false;
-		InitiateChange(block.blockhash(block.number - 1), pendingList);
+		emit InitiateChange(block.blockhash(block.number - 1), pendingList);
 	}
 
 	function finalizeChange() public only_system_and_not_finalized {
 		validatorsList = pendingList;
 		finalized = true;
-		ChangeFinalized(validatorsList);
+		emit ChangeFinalized(validatorsList);
 	}
 
 	// SUPPORT LOOKUP AND MANIPULATION
@@ -128,7 +128,7 @@ contract MajoritySet is ValidatorSet {
 		AddressVotes.insert(validatorsStatus[validator].support, msg.sender);
 		validatorsStatus[msg.sender].supported.push(validator);
 		addValidator(validator);
-		Support(msg.sender, validator, true);
+		emit Support(msg.sender, validator, true);
 	}
 
 	// Remove support for a validator.
@@ -144,7 +144,7 @@ contract MajoritySet is ValidatorSet {
 	// Called when a validator should be removed.
 	function reportMalicious(address validator, uint blockNumber, bytes proof) public only_validator is_recent(blockNumber) {
 		removeSupport(msg.sender, validator);
-		Report(msg.sender, validator, true);
+		emit Report(msg.sender, validator, true);
 	}
 
 	// BENIGN MISBEHAVIOUR HANDLING
@@ -153,7 +153,7 @@ contract MajoritySet is ValidatorSet {
 	function reportBenign(address validator, uint blockNumber) public only_validator is_validator(validator) is_recent(blockNumber) {
 		firstBenign(validator);
 		repeatedBenign(validator);
-		Report(msg.sender, validator, false);
+		emit Report(msg.sender, validator, false);
 	}
 
 	// Find the total number of repeated misbehaviour votes.

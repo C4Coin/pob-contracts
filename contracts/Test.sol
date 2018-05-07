@@ -14,7 +14,7 @@
 //!
 //! Original code taken from https://github.com/paritytech/contracts
 
-pragma solidity ^0.4.6;
+pragma solidity ^0.4.4;
 
 import "./interfaces/ValidatorSet.sol";
 
@@ -44,7 +44,7 @@ contract Test is ValidatorSet {
 	function addValidator(address _validator) public {
 		pending.push(_validator);
 		indices[_validator] = validators.length - 1;
-		InitiateChange(block.blockhash(block.number - 1), pending);
+		emit InitiateChange(block.blockhash(block.number - 1), pending);
 	}
 
 	// Remove a validator from the list.
@@ -53,7 +53,7 @@ contract Test is ValidatorSet {
 		delete indices[_validator];
 		delete pending[pending.length-1];
 		pending.length--;
-		InitiateChange(block.blockhash(block.number - 1), pending);
+		emit InitiateChange(block.blockhash(block.number - 1), pending);
 	}
 
 	function reportBenign(address _validator) public {

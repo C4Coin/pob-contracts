@@ -14,14 +14,14 @@
 //!
 //! Original code taken from https://github.com/paritytech/contracts
 
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.4;
 
 import "./Owned.sol";
 import "./ValidatorSet.sol";
 
 contract OuterSet is Owned, ValidatorSet {
 	// System address, used by the block sealer.
-	address constant SYSTEM_ADDRESS = 0xfffffffffffffffffffffffffffffffffffffffe;
+	address constant SYSTEM_ADDRESS = 0x00fffffffffffffffffffffffffffffffffffffffe;
 	// `getValidators()` method signature.
 	bytes4 constant SIGNATURE = 0xb7ab4db5;
 
@@ -48,23 +48,24 @@ contract OuterSet is Owned, ValidatorSet {
 	// For innerSet.
 	function initiateChange(bytes32 _parent_hash, address[] _new_set) public only_inner_and_finalized {
 		finalized = false;
-		InitiateChange(_parent_hash, _new_set);
+		emit InitiateChange(_parent_hash, _new_set);
 	}
 
 	// For sealer.
 	function finalizeChange() public only_system_and_not_finalized {
 		finalized = true;
 		innerSet.finalizeChange();
-		FinalizeChange(getValidators());
+		emit FinalizeChange(getValidators());
 	}
 
+	// TODO: fix -> Warning: Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
 	function getValidators() public constant returns (address[]) {
 		address addr = innerSet;
 		bytes4 sig = SIGNATURE;
 		assembly {
 			mstore(0, sig)
 			let ret := call(0xfffffffface8, addr, 0, 0, 4, 0, 0)
-			jumpi(0x02,iszero(ret))
+			jumpi(0x02, iszero(ret))
 			returndatacopy(0, 0, returndatasize)
 			return(0, returndatasize)
 		}

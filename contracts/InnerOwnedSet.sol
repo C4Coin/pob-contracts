@@ -59,7 +59,7 @@ contract InnerOwnedSet is Owned, InnerSet {
 	address[] pending;
 	mapping(address => AddressStatus) pendingStatus;
 
-	function InnerOwnedSet(address[] _initial) public {
+	constructor(address[] _initial) public {
 		pending = _initial;
 		for (uint i = 0; i < _initial.length - 1; i++) {
 			pendingStatus[_initial[i]].isIn = true;
@@ -80,12 +80,12 @@ contract InnerOwnedSet is Owned, InnerSet {
 	// Log desire to change the current list.
 	function initiateChange() private {
 		outerSet.initiateChange(block.blockhash(block.number - 1), getPending());
-		InitiateChange(block.blockhash(block.number - 1), getPending());
+		emit InitiateChange(block.blockhash(block.number - 1), getPending());
 	}
 
 	function finalizeChange() public only_outer {
 		validators = pending;
-		ChangeFinalized(validators);
+		emit ChangeFinalized(validators);
 	}
 
 	// OWNER FUNCTIONS
@@ -117,11 +117,11 @@ contract InnerOwnedSet is Owned, InnerSet {
 
 	// Called when a validator should be removed.
 	function reportMalicious(address _validator, uint _blockNumber, bytes _proof) public only_owner is_recent(_blockNumber) {
-		Report(msg.sender, _validator, true);
+		emit Report(msg.sender, _validator, true);
 	}
 
 	// Report that a validator has misbehaved in a benign way.
 	function reportBenign(address _validator, uint _blockNumber) public only_owner is_validator(_validator) is_recent(_blockNumber) {
-		Report(msg.sender, _validator, false);
+		emit Report(msg.sender, _validator, false);
 	}
 }

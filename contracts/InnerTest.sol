@@ -21,7 +21,7 @@ import "./interfaces/RelaySet.sol";
 contract InnerTest is InnerSet {
 	event ChangeFinalized(address[] current_set);
 
-	function InnerTest(address _outer) public {
+	constructor(address _outer) public {
 		outerSet = OuterSet(_outer);
 	}
 
@@ -32,7 +32,7 @@ contract InnerTest is InnerSet {
 	}
 
 	function finalizeChange() public {
-		ChangeFinalized(dummy);
+		emit ChangeFinalized(dummy);
 	}
 
 	function changeValidators() public {
