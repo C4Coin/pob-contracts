@@ -27,7 +27,7 @@ contract OwnedSet is Owned, ValidatorSet {
 	event ChangeFinalized(address[] current_set);
 
 	// System address, used by the block sealer.
-	address constant SYSTEM_ADDRESS = 0xfffffffffffffffffffffffffffffffffffffffe;
+	address constant SYSTEM_ADDRESS = 0x00fffffffffffffffffffffffffffffffffffffffe;
 	uint public recentBlocks = 20;
 
 	modifier only_system_and_not_finalized() {
@@ -114,7 +114,6 @@ contract OwnedSet is Owned, ValidatorSet {
 	// Remove a validator.
 	function removeValidator(address _validator) public only_owner is_pending(_validator) {
 		pending[pendingStatus[_validator].index] = pending[pending.length - 1];
-		delete pending[pending.length - 1];
 		pending.length--;
 		// Reset address status.
 		delete pendingStatus[_validator].index;

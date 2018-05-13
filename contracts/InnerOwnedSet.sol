@@ -79,8 +79,8 @@ contract InnerOwnedSet is Owned, InnerSet {
 
 	// Log desire to change the current list.
 	function initiateChange() private {
-		outerSet.initiateChange(block.blockhash(block.number - 1), getPending());
-		emit InitiateChange(block.blockhash(block.number - 1), getPending());
+		outerSet.initiateChange(blockhash(block.number - 1), getPending());
+		emit InitiateChange(blockhash(block.number - 1), getPending());
 	}
 
 	function finalizeChange() public only_outer {
@@ -101,7 +101,6 @@ contract InnerOwnedSet is Owned, InnerSet {
 	// Remove a validator.
 	function removeValidator(address _validator) public only_owner is_pending(_validator) {
 		pending[pendingStatus[_validator].index] = pending[pending.length - 1];
-		delete pending[pending.length - 1];
 		pending.length--;
 		// Reset address status.
 		delete pendingStatus[_validator].index;

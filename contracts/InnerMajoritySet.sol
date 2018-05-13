@@ -217,7 +217,7 @@ contract InnerMajoritySet is InnerSet {
 		pendingList[removedIndex] = lastValidator;
 		// Update the index of the last validator.
 		validatorsStatus[lastValidator].index = removedIndex;
-		delete pendingList[lastIndex];
+		// Remove last validator
 		pendingList.length--;
 		// Reset validator status.
 		validatorsStatus[validator].index = 0;

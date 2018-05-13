@@ -49,7 +49,7 @@ contract MajoritySet is ValidatorSet {
 	}
 
 	// System address, used by the block sealer.
-	address constant SYSTEM_ADDRESS = 0xfffffffffffffffffffffffffffffffffffffffe;
+	address constant SYSTEM_ADDRESS = 0x00fffffffffffffffffffffffffffffffffffffffe;
 	// Support can not be added once this number of validators is reached.
 	uint public constant MAX_VALIDATORS = 30;
 	// Time after which the validators will report a validator as malicious.
@@ -73,7 +73,7 @@ contract MajoritySet is ValidatorSet {
 
 	// Each validator is initially supported by all others.
 	constructor() public {
-		pendingList.push(0xf5777f8133aae2734396ab1d43ca54ad11bfb737);
+		pendingList.push(0x00f5777f8133aae2734396ab1d43ca54ad11bfb737);
 
 		initialSupport.count = pendingList.length;
 		for (uint i = 0; i < pendingList.length; i++) {
@@ -102,7 +102,7 @@ contract MajoritySet is ValidatorSet {
 	// Log desire to change the current list.
 	function initiateChange() private when_finalized {
 		finalized = false;
-		emit InitiateChange(block.blockhash(block.number - 1), pendingList);
+		emit InitiateChange(blockhash(block.number - 1), pendingList);
 	}
 
 	function finalizeChange() public only_system_and_not_finalized {
@@ -134,7 +134,7 @@ contract MajoritySet is ValidatorSet {
 	// Remove support for a validator.
 	function removeSupport(address sender, address validator) private {
 		require(AddressVotes.remove(validatorsStatus[validator].support, sender));
-		Support(sender, validator, false);
+		emit Support(sender, validator, false);
 		// Remove validator from the list if there is not enough support.
 		removeValidator(validator);
 	}
@@ -223,7 +223,7 @@ contract MajoritySet is ValidatorSet {
 		pendingList[removedIndex] = lastValidator;
 		// Update the index of the last validator.
 		validatorsStatus[lastValidator].index = removedIndex;
-		delete pendingList[lastIndex];
+		// Remove last validator 
 		pendingList.length--;
 		// Reset validator status.
 		validatorsStatus[validator].index = 0;
