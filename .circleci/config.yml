@@ -58,8 +58,3 @@ jobs:
       - run:
           name: Send reports to codecov.io
           command: codecov
-
-notify:
-  webhooks:
-    # A list of hook hashes, containing the URL field
-    - url: https://discordapp.com/api/webhooks/447226240831848468/B2yIhPP80Ci79X48O6j1Pp9DFYg_qu3EBDmYmBeO-bJVvDdeNVIO3z5puE9ZMpz0AazG/circle
