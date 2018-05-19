@@ -18,24 +18,25 @@ pragma solidity ^0.4.23;
 
 import "./interfaces/RelaySet.sol";
 
+
 contract InnerTest is InnerSet {
-	event ChangeFinalized(address[] current_set);
+    event ChangeFinalized(address[] current_set);
 
-	constructor(address _outer) public {
-		outerSet = OuterSet(_outer);
-	}
+    constructor(address _outer) public {
+        outerSet = OuterSet(_outer);
+    }
 
-	address[] dummy;
+    address[] dummy;
 
-	function getValidators() public constant returns (address[]) {
-		return dummy;
-	}
+    function getValidators() public constant returns (address[]) {
+        return dummy;
+    }
 
-	function finalizeChange() public {
-		emit ChangeFinalized(dummy);
-	}
+    function finalizeChange() public {
+        emit ChangeFinalized(dummy);
+    }
 
-	function changeValidators() public {
-		outerSet.initiateChange(0, dummy);
-	}
+    function changeValidators() public {
+        outerSet.initiateChange(0, dummy);
+    }
 }
