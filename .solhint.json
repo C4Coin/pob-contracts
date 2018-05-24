@@ -4,6 +4,10 @@
     "compiler-fixed": false,
     "indent": ["error", 4],
     "quotes": ["error", "single"],
-    "max-line-length": ["error", 120]
+    "max-line-length": ["error", 120],
+    "func-param-name-mixedcase": false,
+    "modifier-name-mixedcase": false,
+    "no-simple-event-func-name": false,
+    "two-lines-top-level-separator": ["warn"]
   }
 }
