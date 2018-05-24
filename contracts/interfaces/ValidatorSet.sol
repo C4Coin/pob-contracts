@@ -46,13 +46,3 @@ contract ValidatorSet {
     function reportBenign(address validator, uint256 blockNumber) public;
     function reportMalicious(address validator, uint256 blockNumber, bytes proof) public;
 }
-
-
-contract SafeValidatorSet is ValidatorSet {
-    function reportBenign(address validator, uint256 blockNumber) public {}
-    function reportMalicious(address validator, uint256 blockNumber, bytes proof) public {}
-}
-
-contract ImmediateSet is ValidatorSet {
-    function finalizeChange() public {}
-}
