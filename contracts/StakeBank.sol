@@ -3,7 +3,7 @@ pragma solidity ^0.4.23;
 import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
 import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
 import 'openzeppelin-solidity/contracts/lifecycle/Pausable.sol';
-import 'openzeppelin-solidity/contracts/token/ERC20/BurnableToken.sol';
+import 'openzeppelin-solidity/contracts/token/ERC20/StandardBurnableToken.sol';
 import "./interfaces/Lockable.sol";
 import "./interfaces/StakeBankInterface.sol";
 
@@ -16,14 +16,14 @@ contract StakeBank is StakeBankInterface, Lockable {
         uint256 amount;
     }
 
-    BurnableToken public token;
+    StandardBurnableToken public token;
 
     Checkpoint[] public stakeHistory;
 
     mapping (address => Checkpoint[]) public stakesFor;
 
     /// @param _token Token that can be staked.
-    function StakeBank(BurnableToken _token) public {
+    constructor(StandardBurnableToken _token) public {
         require(address(_token) != 0x0);
         token = _token;
     }
@@ -45,7 +45,7 @@ contract StakeBank is StakeBankInterface, Lockable {
 
         require(token.transferFrom(msg.sender, address(this), amount));
 
-        Staked(user, amount, totalStakedFor(user), data);
+        emit Staked(user, amount, totalStakedFor(user), data);
     }
 
     /// @notice Unstakes a certain amount of tokens.
@@ -58,7 +58,7 @@ contract StakeBank is StakeBankInterface, Lockable {
         updateCheckpointAtNow(stakeHistory, amount, true);
 
         require(token.transfer(msg.sender, amount));
-        Unstaked(msg.sender, amount, totalStakedFor(msg.sender), data);
+        emit Unstaked(msg.sender, amount, totalStakedFor(msg.sender), data);
     }
 
     /// @notice Returns total tokens staked for address.
