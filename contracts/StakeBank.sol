@@ -80,8 +80,8 @@ contract StakeBank is StakeBankInterface, Lockable {
         return totalStakedAt(block.number);
     }
 
-    /// @notice Returns if history related functions are implemented.
-    /// @return Bool whether history is implemented.
+    /// @notice Returns true if history related functions are implemented.
+    /// @return Bool Are history related functions implemented?
     function supportsHistory() public pure returns (bool) {
         return true;
     }
@@ -120,6 +120,10 @@ contract StakeBank is StakeBankInterface, Lockable {
         return stakedAt(stakeHistory, blockNumber);
     }
 
+    /// @notice Updates checkpoint history based on amount and an unstaking flag
+    /// @param history Checkpoint state array which stores a block number and amount
+    /// @param amount Amount of tokens to stake or unstake
+    /// @param isUnstake flag to represent whether to remove staked amount in checkpoint
     function updateCheckpointAtNow(Checkpoint[] storage history, uint256 amount, bool isUnstake) internal {
 
         uint256 length = history.length;
@@ -141,6 +145,9 @@ contract StakeBank is StakeBankInterface, Lockable {
         }
     }
 
+    /// @notice Gets amount staked given checkpoint history and the block number
+    /// @param history Checkpoint state array which stores a block number and amount
+    /// @param blockNumber the block number at which a previous stake was set
     function stakedAt(Checkpoint[] storage history, uint256 blockNumber) internal view returns (uint256) {
         uint256 length = history.length;
 

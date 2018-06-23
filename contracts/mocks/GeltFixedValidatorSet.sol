@@ -7,8 +7,6 @@ contract GeltFixedValidatorSet {
     0x007d577a597b2742b498cb5cf0c26cdcd726d39e6e
   ];
 
-  constructor() public {
-  }
   /// Issue this log event to signal a desired change in validator set.
   /// This will not lead to a change in active validator set until
   /// finalizeChange is called.
@@ -31,18 +29,15 @@ contract GeltFixedValidatorSet {
   ///
   /// Also called when the contract is first enabled for consensus. In this case,
   /// the "change" finalized is the activation of the initial set.
-  function finalizeChange() public {
+  function finalizeChange() public pure {
 
   }
 
-  // Reporting functions: operate on current validator set.
-  // malicious behavior requires proof, which will vary by engine.
+  // Benign misbehavior from unavailability or other network issues
+  // Not implemented, but required for a non-safe validator contract interface.
+  function reportBenign(address validator, uint256 blockNumber) public;
 
-  function reportBenign(address validator, uint256 blockNumber) public {
-
-  }
-
-  function reportMalicious(address validator, uint256 blockNumber, bytes proof) public {
-
-  }
+  // Malicious behavior requires proof, which will vary by engine.
+  // Not implemented, but required for a non-safe validator contract interface.
+  function reportMalicious(address validator, uint256 blockNumber, bytes proof) public;
 }

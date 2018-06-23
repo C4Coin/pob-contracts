@@ -143,7 +143,8 @@ contract MajoritySet is ValidatorSet {
     // MALICIOUS BEHAVIOUR HANDLING
 
     // Called when a validator should be removed.
-    function reportMalicious(address validator, uint blockNumber, bytes proof) public only_validator is_recent(blockNumber) {
+    // The proof bytes are not yet implemented
+    function reportMalicious(address validator, uint blockNumber, bytes) public only_validator is_recent(blockNumber) {
         removeSupport(msg.sender, validator);
         emit Report(msg.sender, validator, true);
     }

@@ -5,7 +5,4 @@ import "./StakeBank.sol";
 
 contract StakingSet is ValidatorSet {
   StakeBank stakeBank;
-
-  constructor() public {
-  }
 }
