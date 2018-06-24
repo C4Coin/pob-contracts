@@ -18,6 +18,7 @@ pragma solidity ^0.4.23;
 
 import "./interfaces/ValidatorSet.sol";
 import "./libraries/AddressVotes.sol";
+import "./InitialSet.sol";
 
 // Existing validators can give support to addresses.
 // Support can not be added once MAX_VALIDATORS are present.
@@ -28,7 +29,7 @@ import "./libraries/AddressVotes.sol";
 // Benign misbehaviour can be absolved before being called the second time.
 
 
-contract MajoritySet is ValidatorSet {
+contract MajoritySet is ValidatorSet, InitialSet {
     // EVENTS
     event Report(address indexed reporter, address indexed reported, bool indexed malicious);
     event Support(address indexed supporter, address indexed supported, bool indexed added);
@@ -62,8 +63,6 @@ contract MajoritySet is ValidatorSet {
 
     // Current list of addresses entitled to participate in the consensus.
     address[] public validatorsList;
-    // Pending list of validator addresses.
-    address[] pendingList;
     // Was the last validator change finalized.
     bool finalized;
     // Tracker of status for each address.
