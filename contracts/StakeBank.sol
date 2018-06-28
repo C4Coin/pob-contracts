@@ -3,10 +3,11 @@ pragma solidity ^0.4.23;
 import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
 import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
 import 'openzeppelin-solidity/contracts/lifecycle/Pausable.sol';
-import 'openzeppelin-solidity/contracts/token/ERC20/StandardBurnableToken.sol';
+import 'openzeppelin-solidity/contracts/token/ERC20/ERC20.sol';
 import "./interfaces/Lockable.sol";
 import "./interfaces/StakeBankInterface.sol";
 
+// TODO: Use DelayedStakeBank from HarbourProject
 contract StakeBank is StakeBankInterface, Lockable {
 
     using SafeMath for uint256;
@@ -16,14 +17,14 @@ contract StakeBank is StakeBankInterface, Lockable {
         uint256 amount;
     }
 
-    StandardBurnableToken public token;
+    ERC20 public token;
 
     Checkpoint[] public stakeHistory;
 
     mapping (address => Checkpoint[]) public stakesFor;
 
     /// @param _token Token that can be staked.
-    constructor(StandardBurnableToken _token) public {
+    constructor(ERC20 _token) public {
         require(address(_token) != 0x0);
         token = _token;
     }
