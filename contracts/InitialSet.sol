@@ -16,8 +16,8 @@ pragma solidity ^0.4.23;
 
 
 contract InitialSet {
-  // Pending list of validator addresses.
-  address[] pendingList = [
-    0x00f5777f8133aae2734396ab1d43ca54ad11bfb737
-  ];
+    // Pending list of validator addresses.
+    address[] pendingList = [
+        0x00f5777f8133aae2734396ab1d43ca54ad11bfb737
+    ];
 }

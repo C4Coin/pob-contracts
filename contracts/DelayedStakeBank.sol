@@ -4,16 +4,16 @@
 
 pragma solidity ^0.4.23;
 
-import "./StakeBank.sol";
+import "./IndexedStakeBank.sol";
 
 
-contract DelayedStakeBank is StakeBank {
+contract DelayedStakeBank is IndexedStakeBank {
     uint256 unstakeDelay;
     mapping (address => uint256) lastStaked;
 
     /// @param _token Token that can be staked.
     /// @param _unstakeDelay Earliest time (s) after last stake that stake can be withdrawn
-    function DelayedStakeBank(ERC20 _token, uint256 _unstakeDelay) StakeBank(_token) public {
+    constructor(ERC20 _token, uint256 _unstakeDelay) IndexedStakeBank(_token) public {
         unstakeDelay = _unstakeDelay;
     }
 
@@ -24,14 +24,14 @@ contract DelayedStakeBank is StakeBank {
         stakeFor(msg.sender, amount, data);
     }
 
-    /// @notice Overrides StakeBank.stakeFor, to prevent denial of service
+    /// @notice Overrides IndexedStakeBank.stakeFor, to prevent denial of service
     /// @param user Address of the user to stake for.
     /// @param amount Amount of tokens to stake.
     /// @param data Data field used for signalling in more complex staking applications.
     function stakeFor(address user, uint256 amount, bytes data) public {
         require(user == msg.sender);
         lastStaked[msg.sender] = block.number;
-        StakeBank.stakeFor(user, amount, data);
+        IndexedStakeBank.stakeFor(user, amount, data);
     }
 
     /// @notice Unstakes a certain amount of tokens, if delay has passed.
@@ -40,6 +40,6 @@ contract DelayedStakeBank is StakeBank {
     /// @param data Data field used for signalling in more complex staking applications.
     function unstake(uint256 amount, bytes data) public {
         require(block.number >= lastStaked[msg.sender].add(unstakeDelay));
-        StakeBank.unstake(amount, data);
+        IndexedStakeBank.unstake(amount, data);
     }
 }

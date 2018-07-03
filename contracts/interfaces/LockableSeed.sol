@@ -4,13 +4,9 @@ import './Lockable.sol';
 
 
 contract LockableSeed is Lockable {
-  uint private seed;
+    uint public seed;
 
-  function getSeed() public constant returns (uint) {
-    return seed;
-  }
-
-  function setSeed(uint _seed) onlyOwner, onlyWhenUnlocked {
-    seed = _seed;
-  }
+    function setSeed(uint _seed) onlyOwner, onlyWhenUnlocked {
+        seed = _seed;
+    }
 }

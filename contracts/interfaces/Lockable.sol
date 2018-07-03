@@ -4,7 +4,6 @@ import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
 
 
 contract Lockable is Ownable {
-
     bool public locked;
 
     modifier onlyWhenUnlocked() {

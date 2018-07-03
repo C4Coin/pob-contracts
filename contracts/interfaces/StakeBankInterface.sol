@@ -1,6 +1,7 @@
 pragma solidity ^0.4.23;
 
 
+// EIP900 Inteface with staker balances
 contract StakeBankInterface {
     event Staked(address indexed user, uint256 amount, uint256 total, bytes data);
     event Unstaked(address indexed user, uint256 amount, uint256 total, bytes data);
@@ -12,9 +13,8 @@ contract StakeBankInterface {
     function totalStaked() public view returns (uint256);
     function token() public view returns (address);
     function supportsHistory() public pure returns (bool);
-
-    // optional
     function lastStakedFor(address addr) public view returns (uint256);
     function totalStakedForAt(address addr, uint256 blockNumber) public view returns (uint256);
     function totalStakedAt(uint256 blockNumber) public view returns (uint256);
+    function stakersBalances() public constant returns (address[], uint[]);
 }

@@ -7,9 +7,8 @@ import 'openzeppelin-solidity/contracts/token/ERC20/ERC20.sol';
 import "./interfaces/Lockable.sol";
 import "./interfaces/StakeBankInterface.sol";
 
-// TODO: Use DelayedStakeBank from HarbourProject
-contract StakeBank is StakeBankInterface, Lockable {
 
+contract StakeBank is StakeBankInterface, Lockable {
     using SafeMath for uint256;
 
     struct Checkpoint {
@@ -153,11 +152,11 @@ contract StakeBank is StakeBankInterface, Lockable {
         uint256 length = history.length;
 
         if (length == 0 || blockNumber < history[0].at) {
-            return 0;
+          return 0;
         }
 
         if (blockNumber >= history[length-1].at) {
-            return history[length-1].amount;
+          return history[length-1].amount;
         }
 
         uint min = 0;
