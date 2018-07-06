@@ -1,45 +1,72 @@
-//! TODO: Determine dual licensing for this project
-//! since HarbourProject uses GPLv3 and parity contacts use Apache.
-//! https://softwareengineering.stackexchange.com/questions/197710/how-to-use-gpl-v3-with-apache-license-2-0
+/*
+Smart-contracts for the C4Coin PoB consensus protocol.
+Copyright (C) 2018  tigran@c4coin.org
 
-pragma solidity ^0.4.23;
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-import "./IndexedStakeBank.sol";
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+pragma solidity ^0.4.24;
 
 
-contract DelayedStakeBank is IndexedStakeBank {
+import "./BalanceStakeBank.sol";
+
+
+/**
+ * @title Contract for a stake bank implementing a stake and unstake delay
+ */
+contract DelayedStakeBank is BalanceStakeBank {
     uint256 unstakeDelay;
+
+    // Balance of last amount staked for a staker
     mapping (address => uint256) lastStaked;
 
-    /// @param _token Token that can be staked.
-    /// @param _unstakeDelay Earliest time (s) after last stake that stake can be withdrawn
-    constructor(ERC20 _token, uint256 _unstakeDelay) IndexedStakeBank(_token) public {
+    /**
+     * @param _token Token that can be staked.
+     * @param _unstakeDelay Earliest time (s) after last stake that stake can be withdrawn
+     */
+    constructor(ERC20 _token, uint256 _unstakeDelay) BalanceStakeBank(_token) public {
         unstakeDelay = _unstakeDelay;
     }
 
-    /// @notice Stakes a certain amount of tokens.
-    /// @param amount Amount of tokens to stake.
-    /// @param data Data field used for signalling in more complex staking applications.
+    /**
+     * @notice Stakes a certain amount of tokens.
+     * @param amount Amount of tokens to stake.
+     * @param data Data field used for signalling in more complex staking applications.
+     */
     function stake(uint256 amount, bytes data) public {
         stakeFor(msg.sender, amount, data);
     }
 
-    /// @notice Overrides IndexedStakeBank.stakeFor, to prevent denial of service
-    /// @param user Address of the user to stake for.
-    /// @param amount Amount of tokens to stake.
-    /// @param data Data field used for signalling in more complex staking applications.
+    /**
+     * @notice Overrides IndexedStakeBank.stakeFor, to prevent denial of service
+     * @param user Address of the user to stake for.
+     * @param amount Amount of tokens to stake.
+     * @param data Data field used for signalling in more complex staking applications.
+     */
     function stakeFor(address user, uint256 amount, bytes data) public {
         require(user == msg.sender);
         lastStaked[msg.sender] = block.number;
-        IndexedStakeBank.stakeFor(user, amount, data);
+        BalanceStakeBank.stakeFor(user, amount, data);
     }
 
-    /// @notice Unstakes a certain amount of tokens, if delay has passed.
-    /// @dev Overrides StakeBank.unstake
-    /// @param amount Amount of tokens to unstake.
-    /// @param data Data field used for signalling in more complex staking applications.
+    /**
+     * @notice Unstakes a certain amount of tokens, if delay has passed.
+     * @dev Overrides StakeBank.unstake
+     * @param amount Amount of tokens to unstake.
+     * @param data Data field used for signalling in more complex staking applications.
+     */
     function unstake(uint256 amount, bytes data) public {
         require(block.number >= lastStaked[msg.sender].add(unstakeDelay));
-        IndexedStakeBank.unstake(amount, data);
+        BalanceStakeBank.unstake(amount, data);
     }
 }

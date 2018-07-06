@@ -18,16 +18,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.24;
 
 
-import './Lockable.sol';
-
-
-/**
- * @title A seed used for RNG which is only updatable by owner when locked
- */
-contract LockableSeed is Lockable {
-    uint public seed;
-
-    function setSeed(uint _seed) public onlyOwner onlyWhenUnlocked {
-        seed = _seed;
-    }
+// @title Contract template is consumed by generator CLI to populate reserved peers
+contract InitialSet {
+    // Pending list of validator addresses.
+    address[] pendingList = [
+        // {{initialReservedPeers}}
+    ];
 }

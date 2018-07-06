@@ -18,16 +18,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.24;
 
 
-import './Lockable.sol';
+import "./IStakebank.sol";
 
 
 /**
- * @title A seed used for RNG which is only updatable by owner when locked
+ * @title Interface for a stake bank which burns tokens
  */
-contract LockableSeed is Lockable {
-    uint public seed;
+contract IBurnableStakeBank is IStakeBank {
+    event StakeBurned(address indexed user, uint256 amount, bytes data);
 
-    function setSeed(uint _seed) public onlyOwner onlyWhenUnlocked {
-        seed = _seed;
-    }
+    function burn(address user, uint256 amount, bytes data) public;
+    function burnAll(address user, bytes data) public;
 }
