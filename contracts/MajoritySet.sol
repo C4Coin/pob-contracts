@@ -18,9 +18,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.24;
 
 
-import "./interfaces/ValidatorSet.sol";
-import "./libraries/AddressVotes.sol";
-import "./InitialSet.sol";
+import './interfaces/IValidatorSet.sol';
+import './libraries/AddressVotes.sol';
+import './InitialSet.sol';
 
 
 /**
@@ -31,7 +31,7 @@ import "./InitialSet.sol";
  * @notice Benign misbehaviour causes supprt removal if its called again after MAX_INACTIVITY.
  * @notice Benign misbehaviour can be absolved before being called the second time.
  */
-contract MajoritySet is ValidatorSet, InitialSet {
+contract MajoritySet is IValidatorSet, InitialSet {
     event Report(address indexed reporter, address indexed reported, bool indexed malicious);
     event Support(address indexed supporter, address indexed supported, bool indexed added);
     event ChangeFinalized(address[] current_set);
@@ -56,25 +56,25 @@ contract MajoritySet is ValidatorSet, InitialSet {
     }
 
     // System address, used by the block sealer.
-    address constant SYSTEM_ADDRESS = 0x00fffffffffffffffffffffffffffffffffffffffe;
+    address private constant SYSTEM_ADDRESS = 0x00fffffffffffffffffffffffffffffffffffffffe;
     // Support can not be added once this number of validators is reached.
-    uint public constant MAX_VALIDATORS = 30;
+    uint private constant MAX_VALIDATORS = 30;
     // Time after which the validators will report a validator as malicious.
-    uint public constant MAX_INACTIVITY = 6 hours;
+    uint private constant MAX_INACTIVITY = 6 hours;
     // Ignore misbehaviour older than this number of blocks.
-    uint public constant RECENT_BLOCKS = 20;
+    uint private constant RECENT_BLOCKS = 20;
 
     // STATE
 
     // Current list of addresses entitled to participate in the consensus.
-    address[] public validatorsList;
+    address[] private validatorsList;
     // Was the last validator change finalized.
-    bool finalized;
+    bool private finalized;
     // Tracker of status for each address.
-    mapping(address => ValidatorStatus) validatorsStatus;
+    mapping(address => ValidatorStatus) private validatorsStatus;
 
     // Used to lower the constructor cost.
-    AddressVotes.Data initialSupport;
+    AddressVotes.Data private initialSupport;
 
     /**
      * Each validator is initially supported by all others.
@@ -105,12 +105,6 @@ contract MajoritySet is ValidatorSet, InitialSet {
         return validatorsList;
     }
 
-    // @notice Log desire to change the current list.
-    function initiateChange() private when_finalized {
-        finalized = false;
-        emit InitiateChange(blockhash(block.number - 1), pendingList);
-    }
-
     // @notice called when a round is finalized by engine
     function finalizeChange() public only_system_and_not_finalized {
         validatorsList = pendingList;
@@ -119,7 +113,6 @@ contract MajoritySet is ValidatorSet, InitialSet {
     }
 
     // SUPPORT LOOKUP AND MANIPULATION
-
     // @notice Find the total support for a given address.
     function getSupport(address validator) public constant returns (uint) {
         return AddressVotes.count(validatorsStatus[validator].support);
@@ -139,78 +132,7 @@ contract MajoritySet is ValidatorSet, InitialSet {
         emit Support(msg.sender, validator, true);
     }
 
-    // @notice Vote to remove support for a validator.
-    function removeSupport(address sender, address validator) private {
-        require(AddressVotes.remove(validatorsStatus[validator].support, sender));
-        emit Support(sender, validator, false);
-        // Remove validator from the list if there is not enough support.
-        removeValidator(validator);
-    }
-
-    // MALICIOUS BEHAVIOUR HANDLING
-
-    /**
-     * @notice Called when a validator should be removed
-     * @notice The proof bytes are not yet implemented
-     */
-    function reportMalicious(address validator, uint blockNumber, bytes) public only_validator is_recent(blockNumber) {
-        removeSupport(msg.sender, validator);
-        emit Report(msg.sender, validator, true);
-    }
-
-    // BENIGN MISBEHAVIOUR HANDLING
-
-    // @notice Report that a validator has misbehaved in a benign way.
-    function reportBenign(address validator, uint blockNumber) public only_validator is_validator(validator) is_recent(blockNumber) {
-        firstBenign(validator);
-        repeatedBenign(validator);
-        emit Report(msg.sender, validator, false);
-    }
-
-    // @notice Find the total number of repeated misbehaviour votes.
-    function getRepeatedBenign(address validator) public constant returns (uint) {
-        return AddressVotes.count(validatorsStatus[validator].benignMisbehaviour);
-    }
-
-    // @notice Track the first benign misbehaviour.
-    function firstBenign(address validator) private has_not_benign_misbehaved(validator) {
-        validatorsStatus[validator].firstBenign[msg.sender] = now;
-    }
-
-    // @notice Report that a validator has been repeatedly misbehaving.
-    function repeatedBenign(address validator) private has_repeatedly_benign_misbehaved(validator) {
-        AddressVotes.insert(validatorsStatus[validator].benignMisbehaviour, msg.sender);
-        confirmedRepeatedBenign(validator);
-    }
-
-    // @notice When enough long term benign misbehaviour votes have been seen, remove support.
-    function confirmedRepeatedBenign(address validator) private agreed_on_repeated_benign(validator) {
-        validatorsStatus[validator].firstBenign[msg.sender] = 0;
-        AddressVotes.remove(validatorsStatus[validator].benignMisbehaviour, msg.sender);
-        removeSupport(msg.sender, validator);
-    }
-
-    // @notice Absolve a validator from a benign misbehaviour.
-    function absolveFirstBenign(address validator) public has_benign_misbehaved(validator) {
-        validatorsStatus[validator].firstBenign[msg.sender] = 0;
-        AddressVotes.remove(validatorsStatus[validator].benignMisbehaviour, msg.sender);
-    }
-
-    // PRIVATE UTILITY FUNCTIONS
-
-    // @notice Add a status tracker for unknown validator.
-    function newStatus(address validator) private has_no_votes(validator) {
-        validatorsStatus[validator] = ValidatorStatus({
-            isValidator: false,
-            index: pendingList.length,
-            support: AddressVotes.Data({ count: 0 }),
-            supported: new address[](0),
-            benignMisbehaviour: AddressVotes.Data({ count: 0 })
-        });
-    }
-
     // ENACTMENT FUNCTIONS (called when support gets out of line with the validator list)
-
     /**
      * @notice Add the validator if supported by majority.
      * @notice Since the number of validators increases it is possible to some fall below the threshold.
@@ -246,7 +168,7 @@ contract MajoritySet is ValidatorSet, InitialSet {
         // Remove all support given by the removed validator.
         address[] storage toRemove = validatorsStatus[validator].supported;
         for (uint i = 0; i < toRemove.length; i++) {
-                removeSupport(validator, toRemove[i]);
+            removeSupport(validator, toRemove[i]);
         }
         delete validatorsStatus[validator].supported;
         initiateChange();
@@ -261,6 +183,82 @@ contract MajoritySet is ValidatorSet, InitialSet {
     // @notice Update validator status with benign report address
     function firstBenignReported(address reporter, address validator) public constant returns (uint) {
         return validatorsStatus[validator].firstBenign[reporter];
+    }
+
+    // MALICIOUS BEHAVIOUR HANDLING
+    /**
+     * @notice Called when a validator should be removed
+     * @notice The proof bytes are not yet implemented
+     */
+    function reportMalicious(address validator, uint blockNumber, bytes) public only_validator is_recent(blockNumber) {
+        removeSupport(msg.sender, validator);
+        emit Report(msg.sender, validator, true);
+    }
+
+    // BENIGN MISBEHAVIOUR HANDLING
+    // @notice Report that a validator has misbehaved in a benign way.
+    function reportBenign(
+        address validator,
+        uint blockNumber)
+    public only_validator is_validator(validator) is_recent(blockNumber) {
+        firstBenign(validator);
+        repeatedBenign(validator);
+        emit Report(msg.sender, validator, false);
+    }
+
+    // @notice Find the total number of repeated misbehaviour votes.
+    function getRepeatedBenign(address validator) public constant returns (uint) {
+        return AddressVotes.count(validatorsStatus[validator].benignMisbehaviour);
+    }
+
+    // @notice Vote to remove support for a validator.
+    function removeSupport(address sender, address validator) private {
+        require(AddressVotes.remove(validatorsStatus[validator].support, sender));
+        emit Support(sender, validator, false);
+        // Remove validator from the list if there is not enough support.
+        removeValidator(validator);
+    }
+
+    // @notice Log desire to change the current list.
+    function initiateChange() private when_finalized {
+        finalized = false;
+        emit InitiateChange(blockhash(block.number - 1), pendingList);
+    }
+
+    // @notice Track the first benign misbehaviour.
+    function firstBenign(address validator) private has_not_benign_misbehaved(validator) {
+        validatorsStatus[validator].firstBenign[msg.sender] = now;
+    }
+
+    // @notice Report that a validator has been repeatedly misbehaving.
+    function repeatedBenign(address validator) private has_repeatedly_benign_misbehaved(validator) {
+        AddressVotes.insert(validatorsStatus[validator].benignMisbehaviour, msg.sender);
+        confirmedRepeatedBenign(validator);
+    }
+
+    // @notice When enough long term benign misbehaviour votes have been seen, remove support.
+    function confirmedRepeatedBenign(address validator) private agreed_on_repeated_benign(validator) {
+        validatorsStatus[validator].firstBenign[msg.sender] = 0;
+        AddressVotes.remove(validatorsStatus[validator].benignMisbehaviour, msg.sender);
+        removeSupport(msg.sender, validator);
+    }
+
+    // @notice Absolve a validator from a benign misbehaviour.
+    function absolveFirstBenign(address validator) private has_benign_misbehaved(validator) {
+        validatorsStatus[validator].firstBenign[msg.sender] = 0;
+        AddressVotes.remove(validatorsStatus[validator].benignMisbehaviour, msg.sender);
+    }
+
+    // PRIVATE UTILITY FUNCTIONS
+    // @notice Add a status tracker for unknown validator.
+    function newStatus(address validator) private has_no_votes(validator) {
+        validatorsStatus[validator] = ValidatorStatus({
+            isValidator: false,
+            index: pendingList.length,
+            support: AddressVotes.Data({ count: 0 }),
+            supported: new address[](0),
+            benignMisbehaviour: AddressVotes.Data({ count: 0 })
+        });
     }
 
     modifier has_high_support(address validator) {

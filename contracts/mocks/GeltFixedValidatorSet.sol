@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.24;
 
 
-import "../interfaces/IValidatorSet.sol";
+import '../interfaces/IValidatorSet.sol';
 
 
 /**
@@ -39,7 +39,7 @@ contract GeltFixedValidatorSet is IValidatorSet {
     }
 
     /// Called when an initiated change reaches finality and is activated.
-    function finalizeChange() public pure;
+    function finalizeChange() public;
 
     // Benign misbehavior from unavailability or other network issues
     // Not implemented, but required for a non-safe validator contract interface.

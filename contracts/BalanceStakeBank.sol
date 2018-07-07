@@ -18,8 +18,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.24;
 
 
-import "./interfaces/IBalanceStakeBank.sol";
-import "./StakeBank.sol";
+import './interfaces/IBalanceStakeBank.sol';
+import './StakeBank.sol';
 
 
 /**
@@ -48,7 +48,7 @@ contract BalanceStakeBank is StakeBank, IBalanceStakeBank {
     mapping (address => bool) public isSorted;
 
     // @param _token Token that can be staked.
-    constructor(ERC20 _token) StakeBank(_token) public {
+    constructor(ERC20 _token) public StakeBank(_token) {
         StakeData memory temp = StakeData({ amount: 0, staker: address(0) });
         stakeNodes.push(Node(temp, 0, 0));
     }
@@ -88,7 +88,7 @@ contract BalanceStakeBank is StakeBank, IBalanceStakeBank {
     }
 
     // @notice Retrieves balance for each staked address in stake nodes
-    function totalBalances() view returns (address[], uint[]) {
+    function totalBalances() public view returns (address[], uint[]) {
         address[] memory stakers = new address[](numStakers);
         uint[] memory amounts = new uint[](numStakers);
         uint current = stakeNodes[0].next;
@@ -143,7 +143,7 @@ contract BalanceStakeBank is StakeBank, IBalanceStakeBank {
     }
 
     // @notice Find a node by address in the stake nodes
-    function searchNode(address staker) view returns (uint) {
+    function searchNode(address staker) internal view returns (uint) {
         uint current = stakeNodes[0].next;
         while (isValidNode(current)) {
             if (staker == stakeNodes[current].data.staker) {
@@ -181,19 +181,19 @@ contract BalanceStakeBank is StakeBank, IBalanceStakeBank {
 
     // @notice Remove a node from the stake nodes by deleting array item and repointing prev. and next
     function removeNode(uint id) internal {
-       require(isValidNode(id));
+        require(isValidNode(id));
 
-       Node storage node = stakeNodes[id];
+        Node storage node = stakeNodes[id];
 
-       stakeNodes[node.next].prev = node.prev;
-       stakeNodes[node.prev].next = node.next;
+        stakeNodes[node.next].prev = node.prev;
+        stakeNodes[node.prev].next = node.next;
 
-       delete stakeNodes[id];
-       numStakers--;
-   }
+        delete stakeNodes[id];
+        numStakers--;
+    }
 
-   // @notice A valid node is the head or has a previous node.
-   function isValidNode(uint id) view returns (bool) {
+    // @notice A valid node is the head or has a previous node.
+    function isValidNode(uint id) internal view returns (bool) {
         // 0 is a sentinel and therefore invalid.
         return id != 0 && (id == stakeNodes[0].next || stakeNodes[id].prev != 0);
     }

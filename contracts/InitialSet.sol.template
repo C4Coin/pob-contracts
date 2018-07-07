@@ -22,6 +22,6 @@ pragma solidity ^0.4.24;
 contract InitialSet {
     // Pending list of validator addresses.
     address[] pendingList = [
-        // {{initialReservedPeers}}
+        {{initialReservedPeers}}
     ];
 }

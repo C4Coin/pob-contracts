@@ -18,23 +18,23 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.24;
 
 
-import "./BalanceStakeBank.sol";
+import './BalanceStakeBank.sol';
 
 
 /**
  * @title Contract for a stake bank implementing a stake and unstake delay
  */
 contract DelayedStakeBank is BalanceStakeBank {
-    uint256 unstakeDelay;
+    uint256 private unstakeDelay;
 
     // Balance of last amount staked for a staker
-    mapping (address => uint256) lastStaked;
+    mapping (address => uint256) private lastStaked;
 
     /**
      * @param _token Token that can be staked.
      * @param _unstakeDelay Earliest time (s) after last stake that stake can be withdrawn
      */
-    constructor(ERC20 _token, uint256 _unstakeDelay) BalanceStakeBank(_token) public {
+    constructor(ERC20 _token, uint256 _unstakeDelay) public BalanceStakeBank(_token) {
         unstakeDelay = _unstakeDelay;
     }
 

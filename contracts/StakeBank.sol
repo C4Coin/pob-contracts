@@ -19,15 +19,13 @@ pragma solidity ^0.4.24;
 
 
 import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
-import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
-import 'openzeppelin-solidity/contracts/lifecycle/Pausable.sol';
 import 'openzeppelin-solidity/contracts/token/ERC20/ERC20.sol';
-import "./interfaces/IStakeBank.sol";
-
+import './interfaces/Lockable.sol';
+import './interfaces/IStakeBank.sol';
 
 
 // @title Contract for stake bank with checkpoint history of all stakes and total staked at block
-contract StakeBank is IStakeBank {
+contract StakeBank is IStakeBank, Lockable {
     using SafeMath for uint256;
 
     struct Checkpoint {
@@ -59,9 +57,9 @@ contract StakeBank is IStakeBank {
      * @notice Stakes a certain amount of tokens for another user.
      * @param user Address of the user to stake for.
      * @param amount Amount of tokens to stake.
-     * @param data Data field used for signalling in more complex staking applications.
+     * @param __data Data field used for signalling in more complex staking applications.
      */
-    function stakeFor(address user, uint256 amount, bytes data) public onlyWhenUnlocked {
+    function stakeFor(address user, uint256 amount, bytes __data) public onlyWhenUnlocked {
         updateCheckpointAtNow(stakesFor[user], amount, false);
         updateCheckpointAtNow(stakeHistory, amount, false);
 
@@ -71,9 +69,9 @@ contract StakeBank is IStakeBank {
     /**
      * @notice Unstakes a certain amount of tokens.
      * @param amount Amount of tokens to unstake.
-     * @param data Data field used for signalling in more complex staking applications.
+     * @param __data Data field used for signalling in more complex staking applications.
      */
-    function unstake(uint256 amount, bytes data) public {
+    function unstake(uint256 amount, bytes __data) public {
         require(totalStakedFor(msg.sender) >= amount);
 
         updateCheckpointAtNow(stakesFor[msg.sender], amount, true);
@@ -190,11 +188,11 @@ contract StakeBank is IStakeBank {
         uint256 length = history.length;
 
         if (length == 0 || blockNumber < history[0].at) {
-          return 0;
+            return 0;
         }
 
         if (blockNumber >= history[length-1].at) {
-          return history[length-1].amount;
+            return history[length-1].amount;
         }
 
         uint min = 0;
