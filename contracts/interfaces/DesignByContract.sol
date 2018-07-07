@@ -18,10 +18,24 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.24;
 
 
-// @title Contract that acts as a stub containing a default for initial consoritum members
-contract InitialSet {
-    // Pending list of validator addresses.
-    address[] internal pendingList = [
-        0x00f5777f8133aae2734396ab1d43ca54ad11bfb737
-    ];
+/**
+ * @title Desing by contract (Hoare logic)
+ * @notice Gives deriving contracts design by contract modifiers
+ */ 
+contract DBC {
+    modifier pre_cond(bool condition) {
+        require(condition);
+        _;
+    }
+
+    modifier post_cond(bool condition) {
+        _;
+        assert(condition);
+    }
+
+    modifier invariant(bool condition) {
+        require(condition);
+        _;
+        assert(condition);
+    }
 }

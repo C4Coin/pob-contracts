@@ -18,10 +18,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.24;
 
 
-// @title Contract that acts as a stub containing a default for initial consoritum members
-contract InitialSet {
-    // Pending list of validator addresses.
-    address[] internal pendingList = [
-        0x00f5777f8133aae2734396ab1d43ca54ad11bfb737
-    ];
+import './IStakeBank.sol';
+
+
+/**
+ * @title Interface for a stake bank which burns tokens
+ */
+contract IBurnableStakeBank is IStakeBank {
+    event StakeBurned(address indexed user, uint256 amount, bytes data);
+
+    function burn(address user, uint256 amount, bytes data) public;
+    function burnAll(address user, bytes data) public;
 }
