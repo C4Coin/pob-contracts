@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.24;
 
 
-import './IStakebank.sol';
+import './IStakeBank.sol';
 
 
 /**
