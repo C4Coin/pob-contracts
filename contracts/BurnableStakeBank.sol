@@ -35,9 +35,11 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
 
     StandardBurnableToken public token;
     Checkpoint[] public stakeHistory;
+    Checkpoint[] public burnHistory;
     uint256 public stakeLockBlockInterval = 1000;
 
     mapping (address => Checkpoint[]) public stakesFor;
+    mapping (address => Checkpoint[]) public burnsFor;
 
     // @param _token Token that can be staked.
     constructor(ConsensusToken _token) public {
@@ -81,18 +83,11 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
         require(lastStakedForUser >= burnAmount);
 
         // Burn tokens
+        updateCheckpointAtNow(burnsFor[user], burnAmount, false);
         token.burn(burnAmount);
 
-        // Update staking checkpoint for user
-        require(stakesFor[user].length > 0);
-        uint256 lastCheckpoint = stakesFor[user].length-1;
-        Checkpoint storage userCheckpoint = stakesFor[user][lastCheckpoint];
-        uint256 newBalance = userCheckpoint.amount.sub(burnAmount);
-        updateCheckpointAtNow(stakesFor[user], newBalance, false);
-
-        // Update total stake checkpoint
-        uint totalStake = totalStaked();
-        updateCheckpointAtNow(stakeHistory, totalStake - burnAmount, false);
+        // Update total burn checkpoint
+        updateCheckpointAtNow(burnHistory, burnAmount, false);
     }
 
     /**
@@ -195,10 +190,12 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
             return;
         }
 
+        // Create new checkpoint for block containing latest stake amount
         if (history[length-1].at < block.number) {
             history.push(Checkpoint({at: block.number, amount: history[length-1].amount}));
         }
 
+        // Add/sub the difference in stake to new checkpoint
         Checkpoint storage checkpoint = history[length];
 
         if (isUnstake) {
