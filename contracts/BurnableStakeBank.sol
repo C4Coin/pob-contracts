@@ -19,13 +19,13 @@ pragma solidity ^0.4.24;
 
 
 import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
-import 'openzeppelin-solidity/contracts/token/ERC20/ERC20.sol';
 import './interfaces/Lockable.sol';
-import './interfaces/IStakeBank.sol';
+import './interfaces/IBurnableStakeBank.sol';
+import './interfaces/ConsensusToken.sol';
 
 
-// @title Contract for stake bank with checkpoint history of all stakes and total staked at block
-contract StakeBank is IStakeBank, Lockable {
+// @title Contract for to keep track of stake (checkpoint history total staked at block) and burn tokens
+contract BurnableStakeBank is IBurnableStakeBank, Lockable {
     using SafeMath for uint256;
 
     struct Checkpoint {
@@ -33,13 +33,14 @@ contract StakeBank is IStakeBank, Lockable {
         uint256 amount;
     }
 
-    ERC20 public token;
+    StandardBurnableToken public token;
     Checkpoint[] public stakeHistory;
+    uint256 public stakeLockBlockInterval = 1000;
 
     mapping (address => Checkpoint[]) public stakesFor;
 
     // @param _token Token that can be staked.
-    constructor(ERC20 _token) public {
+    constructor(ConsensusToken _token) public {
         require(address(_token) != 0x0);
         token = _token;
     }
@@ -57,9 +58,9 @@ contract StakeBank is IStakeBank, Lockable {
      * @notice Stakes a certain amount of tokens for another user.
      * @param user Address of the user to stake for.
      * @param amount Amount of tokens to stake.
-     * @param __data Data field used for signalling in more complex staking applications.
+     * @param __data Data field used for signalling in more complex staking applications. //stakeLockBlockInterval
      */
-    function stakeFor(address user, uint256 amount, bytes __data) public onlyWhenUnlocked {
+    function stakeFor(address user, uint256 amount, bytes __data) public onlyWhenUnlocked onlyWhenStakeInterval {
         updateCheckpointAtNow(stakesFor[user], amount, false);
         updateCheckpointAtNow(stakeHistory, amount, false);
 
@@ -67,11 +68,39 @@ contract StakeBank is IStakeBank, Lockable {
     }
 
     /**
+     * @notice Burn an amount of tokens for user
+     * @param user Address of the user to burn for.
+     * @param burnAmount Amount of tokens to burn.
+     * @param __data Data field used for signalling in more complex staking applications.
+     * TODO: should we use onlyWhenUnlocked or onlySystemAndNotFinalized?
+     * Likely use onlySystemAndNotFinalized at a higher-level not here.
+     */
+    function burnFor(address user, uint256 burnAmount, bytes __data) public onlyWhenUnlocked {
+        // Verify that last stake is sufficient for burn
+        uint256 lastStakedForUser = lastStakedFor(user);
+        require(lastStakedForUser >= burnAmount);
+
+        // Burn tokens
+        token.burn(burnAmount);
+
+        // Update staking checkpoint for user
+        require(stakesFor[user].length > 0);
+        uint256 lastCheckpoint = stakesFor[user].length-1;
+        Checkpoint storage userCheckpoint = stakesFor[user][lastCheckpoint];
+        uint256 newBalance = userCheckpoint.amount.sub(burnAmount);
+        updateCheckpointAtNow(stakesFor[user], newBalance, false);
+
+        // Update total stake checkpoint
+        uint totalStake = totalStaked();
+        updateCheckpointAtNow(stakeHistory, totalStake - burnAmount, false);
+    }
+
+    /**
      * @notice Unstakes a certain amount of tokens.
      * @param amount Amount of tokens to unstake.
      * @param __data Data field used for signalling in more complex staking applications.
      */
-    function unstake(uint256 amount, bytes __data) public {
+    function unstake(uint256 amount, bytes __data) public onlyWhenStakeInterval {
         require(totalStakedFor(msg.sender) >= amount);
 
         updateCheckpointAtNow(stakesFor[msg.sender], amount, true);
@@ -207,5 +236,13 @@ contract StakeBank is IStakeBank, Lockable {
         }
 
         return history[min].amount;
+    }
+
+    /**
+     * @notice Allow only when block is not a "stakeLockBlockInterval" number of blocks
+     */
+    modifier onlyWhenStakeInterval() {
+        require(block.number % stakeLockBlockInterval != 0);
+        _;
     }
 }

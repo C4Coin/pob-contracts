@@ -20,7 +20,7 @@ pragma solidity ^0.4.24;
 
 import './interfaces/IValidatorSet.sol';
 import './libraries/AddressVotes.sol';
-import './InitialSet.sol';
+import './InitialConsortiumSet.sol';
 
 
 /**
@@ -31,7 +31,7 @@ import './InitialSet.sol';
  * @notice Benign misbehaviour causes supprt removal if its called again after MAX_INACTIVITY.
  * @notice Benign misbehaviour can be absolved before being called the second time.
  */
-contract MajoritySet is IValidatorSet, InitialSet {
+contract ConsortiumSet is IValidatorSet, InitialConsortiumSet {
     event Report(address indexed reporter, address indexed reported, bool indexed malicious);
     event Support(address indexed supporter, address indexed supported, bool indexed added);
     event ChangeFinalized(address[] current_set);
@@ -106,7 +106,7 @@ contract MajoritySet is IValidatorSet, InitialSet {
     }
 
     // @notice called when a round is finalized by engine
-    function finalizeChange() public only_system_and_not_finalized {
+    function finalizeChange() public onlySystemAndNotFinalized {
         validatorsList = pendingList;
         finalized = true;
         emit ChangeFinalized(validatorsList);
@@ -124,7 +124,7 @@ contract MajoritySet is IValidatorSet, InitialSet {
     }
 
     // @notice Vote to include a validator.
-    function addSupport(address validator) public only_validator not_voted(validator) free_validator_slots {
+    function addSupport(address validator) public onlyValidator notVoted(validator) freeValidatorSlots {
         newStatus(validator);
         AddressVotes.insert(validatorsStatus[validator].support, msg.sender);
         validatorsStatus[msg.sender].supported.push(validator);
@@ -137,7 +137,7 @@ contract MajoritySet is IValidatorSet, InitialSet {
      * @notice Add the validator if supported by majority.
      * @notice Since the number of validators increases it is possible to some fall below the threshold.
      */
-    function addValidator(address validator) public is_not_validator(validator) has_high_support(validator) {
+    function addValidator(address validator) public isNotValidator(validator) hasHighSupport(validator) {
         validatorsStatus[validator].index = pendingList.length;
         pendingList.push(validator);
         validatorsStatus[validator].isValidator = true;
@@ -151,7 +151,7 @@ contract MajoritySet is IValidatorSet, InitialSet {
      * @notice Remove a validator without enough support.
      * @notice Can be called to clean low support validators after making the list longer.
      */
-    function removeValidator(address validator) public is_validator(validator) has_low_support(validator) {
+    function removeValidator(address validator) public isValidator(validator) hasLowSupport(validator) {
         uint removedIndex = validatorsStatus[validator].index;
         // Can not remove the last validator.
         uint lastIndex = pendingList.length-1;
@@ -190,7 +190,7 @@ contract MajoritySet is IValidatorSet, InitialSet {
      * @notice Called when a validator should be removed
      * @notice The proof bytes are not yet implemented
      */
-    function reportMalicious(address validator, uint blockNumber, bytes) public only_validator is_recent(blockNumber) {
+    function reportMalicious(address validator, uint blockNumber, bytes) public onlyValidator isRecent(blockNumber) {
         removeSupport(msg.sender, validator);
         emit Report(msg.sender, validator, true);
     }
@@ -200,7 +200,7 @@ contract MajoritySet is IValidatorSet, InitialSet {
     function reportBenign(
         address validator,
         uint blockNumber)
-    public only_validator is_validator(validator) is_recent(blockNumber) {
+    public onlyValidator isValidator(validator) isRecent(blockNumber) {
         firstBenign(validator);
         repeatedBenign(validator);
         emit Report(msg.sender, validator, false);
@@ -220,38 +220,38 @@ contract MajoritySet is IValidatorSet, InitialSet {
     }
 
     // @notice Log desire to change the current list.
-    function initiateChange() private when_finalized {
+    function initiateChange() private whenFinalized {
         finalized = false;
         emit InitiateChange(blockhash(block.number - 1), pendingList);
     }
 
     // @notice Track the first benign misbehaviour.
-    function firstBenign(address validator) private has_not_benign_misbehaved(validator) {
+    function firstBenign(address validator) private hasNotBenignMisbehaved(validator) {
         validatorsStatus[validator].firstBenign[msg.sender] = now;
     }
 
     // @notice Report that a validator has been repeatedly misbehaving.
-    function repeatedBenign(address validator) private has_repeatedly_benign_misbehaved(validator) {
+    function repeatedBenign(address validator) private hasRepeatedlyBenignMisbehaved(validator) {
         AddressVotes.insert(validatorsStatus[validator].benignMisbehaviour, msg.sender);
         confirmedRepeatedBenign(validator);
     }
 
     // @notice When enough long term benign misbehaviour votes have been seen, remove support.
-    function confirmedRepeatedBenign(address validator) private agreed_on_repeated_benign(validator) {
+    function confirmedRepeatedBenign(address validator) private agreedOnRepeatedBenign(validator) {
         validatorsStatus[validator].firstBenign[msg.sender] = 0;
         AddressVotes.remove(validatorsStatus[validator].benignMisbehaviour, msg.sender);
         removeSupport(msg.sender, validator);
     }
 
     // @notice Absolve a validator from a benign misbehaviour.
-    function absolveFirstBenign(address validator) private has_benign_misbehaved(validator) {
+    function absolveFirstBenign(address validator) private hasBenignMisbehaved(validator) {
         validatorsStatus[validator].firstBenign[msg.sender] = 0;
         AddressVotes.remove(validatorsStatus[validator].benignMisbehaviour, msg.sender);
     }
 
     // PRIVATE UTILITY FUNCTIONS
     // @notice Add a status tracker for unknown validator.
-    function newStatus(address validator) private has_no_votes(validator) {
+    function newStatus(address validator) private hasNoVotes(validator) {
         validatorsStatus[validator] = ValidatorStatus({
             isValidator: false,
             index: pendingList.length,
@@ -261,68 +261,68 @@ contract MajoritySet is IValidatorSet, InitialSet {
         });
     }
 
-    modifier has_high_support(address validator) {
+    modifier hasHighSupport(address validator) {
         if (highSupport(validator)) { _; }
     }
 
-    modifier has_low_support(address validator) {
+    modifier hasLowSupport(address validator) {
         if (!highSupport(validator)) { _; }
     }
 
-    modifier has_not_benign_misbehaved(address validator) {
+    modifier hasNotBenignMisbehaved(address validator) {
         if (firstBenignReported(msg.sender, validator) == 0) { _; }
     }
 
-    modifier has_benign_misbehaved(address validator) {
+    modifier hasBenignMisbehaved(address validator) {
         if (firstBenignReported(msg.sender, validator) > 0) { _; }
     }
 
-    modifier has_repeatedly_benign_misbehaved(address validator) {
+    modifier hasRepeatedlyBenignMisbehaved(address validator) {
         if (firstBenignReported(msg.sender, validator) - now > MAX_INACTIVITY) { _; }
     }
 
-    modifier agreed_on_repeated_benign(address validator) {
+    modifier agreedOnRepeatedBenign(address validator) {
         if (getRepeatedBenign(validator) > pendingList.length/2) { _; }
     }
 
-    modifier free_validator_slots() {
+    modifier freeValidatorSlots() {
         require(pendingList.length < MAX_VALIDATORS);
         _;
     }
 
-    modifier only_validator() {
+    modifier onlyValidator() {
         require(validatorsStatus[msg.sender].isValidator);
         _;
     }
 
-    modifier is_validator(address someone) {
+    modifier isValidator(address someone) {
         if (validatorsStatus[someone].isValidator) { _; }
     }
 
-    modifier is_not_validator(address someone) {
+    modifier isNotValidator(address someone) {
         if (!validatorsStatus[someone].isValidator) { _; }
     }
 
-    modifier not_voted(address validator) {
+    modifier notVoted(address validator) {
         require(!AddressVotes.contains(validatorsStatus[validator].support, msg.sender));
         _;
     }
 
-    modifier has_no_votes(address validator) {
+    modifier hasNoVotes(address validator) {
         if (AddressVotes.count(validatorsStatus[validator].support) == 0) { _; }
     }
 
-    modifier is_recent(uint blockNumber) {
+    modifier isRecent(uint blockNumber) {
         require(block.number <= blockNumber + RECENT_BLOCKS);
         _;
     }
 
-    modifier only_system_and_not_finalized() {
+    modifier onlySystemAndNotFinalized() {
         require(msg.sender == SYSTEM_ADDRESS && !finalized);
         _;
     }
 
-    modifier when_finalized() {
+    modifier whenFinalized() {
         require(finalized);
         _;
     }

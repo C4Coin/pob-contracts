@@ -25,8 +25,7 @@ import './IStakeBank.sol';
  * @title Interface for a stake bank which burns tokens
  */
 contract IBurnableStakeBank is IStakeBank {
-    event StakeBurned(address indexed user, uint256 amount, bytes data);
+    event StakeBurned(address indexed user, uint256 burnAmount, bytes data);
 
-    function burn(address user, uint256 amount, bytes data) public;
-    function burnAll(address user, bytes data) public;
+    function burnFor(address user, uint256 burnAmount, bytes data) public;
 }

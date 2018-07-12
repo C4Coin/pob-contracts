@@ -24,6 +24,5 @@ import './DelayedStakeBank.sol';
 
 // @title Contract for public validators that wraps the stake bank used by public stakers
 contract PublicStakingSet is IValidatorSet {
-    ERC20 private token;
     DelayedStakeBank private delayedStakeBank; // TODO: determine highest-level stake bank impl.
 }

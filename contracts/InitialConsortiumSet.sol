@@ -18,14 +18,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.24;
 
 
-import './interfaces/IValidatorSet.sol';
-import './interfaces/LockableSeed.sol';
-import './ConsortiumSet.sol';
-import './PublicStakingSet.sol';
-
-
-// @title Contract to create epoch committee from consortium and public validators
-contract EpochCommitteeSet is IValidatorSet, LockableSeed {
-    ConsortiumSet private consortiumSet;
-    PublicStakingSet private publicSet;
+// @title Contract that acts as a stub containing a default for initial consoritum members
+contract InitialConsortiumSet {
+    // Pending list of validator addresses.
+    address[] internal pendingList = [
+        0x00f5777f8133aae2734396ab1d43ca54ad11bfb737
+    ];
 }
