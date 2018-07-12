@@ -34,7 +34,7 @@ contract DelayedStakeBank is BalanceStakeBank {
      * @param _token Token that can be staked.
      * @param _unstakeDelay Earliest time (s) after last stake that stake can be withdrawn
      */
-    constructor(ERC20 _token, uint256 _unstakeDelay) public BalanceStakeBank(_token) {
+    constructor(ConsensusToken _token, uint256 _unstakeDelay) public BalanceStakeBank(_token) {
         unstakeDelay = _unstakeDelay;
     }
 

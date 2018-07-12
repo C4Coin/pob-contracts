@@ -19,13 +19,13 @@ pragma solidity ^0.4.24;
 
 
 import './interfaces/IBalanceStakeBank.sol';
-import './StakeBank.sol';
+import './BurnableStakeBank.sol';
 
 
 /**
  * @title Contract for a stake bank that allows access to staker account balances
  */
-contract BalanceStakeBank is StakeBank, IBalanceStakeBank {
+contract BalanceStakeBank is BurnableStakeBank, IBalanceStakeBank {
     // Staker and staker balance
     struct StakeData {
         uint amount;
@@ -48,7 +48,7 @@ contract BalanceStakeBank is StakeBank, IBalanceStakeBank {
     mapping (address => bool) public isSorted;
 
     // @param _token Token that can be staked.
-    constructor(ERC20 _token) public StakeBank(_token) {
+    constructor(ConsensusToken _token) public BurnableStakeBank(_token) {
         StakeData memory temp = StakeData({ amount: 0, staker: address(0) });
         stakeNodes.push(Node(temp, 0, 0));
     }
@@ -63,26 +63,38 @@ contract BalanceStakeBank is StakeBank, IBalanceStakeBank {
     }
 
     /**
-     * @notice Stakes using StakeBank and updates nodes by address
-     * @dev Overrides StakeBank.stakeFor
+     * @notice Stakes using BurnableStakeBank and updates nodes by address
+     * @dev Overrides BurnableStakeBank.stakeFor
      * @param user Address of the user to stake for.
      * @param amount Amount of tokens to stake.
      * @param data Data field used for signalling in more complex staking applications.
      */
     function stakeFor(address user, uint256 amount, bytes data) public {
-        StakeBank.stakeFor(user, amount, data);
+        BurnableStakeBank.stakeFor(user, amount, data);
         updateNodesByAddress(user);
         emit Staked(user, amount, totalStakedFor(user), data);
     }
 
     /**
-     * @notice Unstakes using StakeBank and updates nodes by address
-     * @dev Overrides StakeBank.unstake
+     * @notice Burns using BurnableStakeBank and updates nodes by address
+     * @dev Overrides BurnableStakeBank.stakeFor
+     * @param burnAmount Amount of tokens to burn.
+     * @param __data Data field used for signalling in more complex staking applications.
+     */
+    function burnFor(address user, uint256 burnAmount, bytes __data) public onlyOwner {
+        BurnableStakeBank.burnFor(user, burnAmount, __data);
+        updateNodesByAddress(user);
+        emit StakeBurned(user, burnAmount, __data);
+    }
+
+    /**
+     * @notice Unstakes using BurnableStakeBank and updates nodes by address
+     * @dev Overrides BurnableStakeBank.unstake
      * @param amount Amount of tokens to unstake.
      * @param data Data field used for signalling in more complex staking applications.
      */
     function unstake(uint256 amount, bytes data) public {
-        StakeBank.unstake(amount, data);
+        BurnableStakeBank.unstake(amount, data);
         updateNodesByAddress(msg.sender);
         emit Unstaked(msg.sender, amount, totalStakedFor(msg.sender), data);
     }
@@ -105,7 +117,7 @@ contract BalanceStakeBank is StakeBank, IBalanceStakeBank {
      * @param _staker Address of the staker used to update stake nodes array
      */
     function updateNodesByAddress(address _staker) internal {
-        uint newStakedAmount = StakeBank.totalStakedFor(_staker);
+        uint newStakedAmount = BurnableStakeBank.totalStakedFor(_staker);
         if (newStakedAmount == 0) {
             isSorted[_staker] = false;
             removeStakerFromArray(_staker);

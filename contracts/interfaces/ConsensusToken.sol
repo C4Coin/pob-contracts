@@ -18,10 +18,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.24;
 
 
-// @title Contract template is consumed by generator CLI to populate reserved peers
-contract InitialSet {
-    // Pending list of validator addresses.
-    address[] pendingList = [
-        {{initialReservedPeers}}
-    ];
+import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
+import 'openzeppelin-solidity/contracts/token/ERC20/StandardBurnableToken.sol';
+import 'openzeppelin-solidity/contracts/token/ERC20/CappedToken.sol';
+/* import 'openzeppelin-solidity/contracts/access/Whitelist.sol'; */
+
+
+// TODO: Inherit from white list
+contract ConsensusToken is StandardBurnableToken, CappedToken {
+
 }
