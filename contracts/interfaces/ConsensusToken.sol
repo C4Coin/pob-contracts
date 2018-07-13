@@ -26,5 +26,5 @@ import 'openzeppelin-solidity/contracts/token/ERC20/CappedToken.sol';
 
 // TODO: Inherit from white list
 contract ConsensusToken is StandardBurnableToken, CappedToken {
-
+   constructor (uint256 _cap) CappedToken(_cap) public {}
 }
