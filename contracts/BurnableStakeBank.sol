@@ -78,16 +78,17 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
      * Likely use onlySystemAndNotFinalized at a higher-level not here.
      */
     function burnFor(address user, uint256 burnAmount, bytes __data) public onlyWhenUnlocked {
-        // Verify that last stake is sufficient for burn
-        uint256 lastStakedForUser = lastStakedFor(user);
-        require(lastStakedForUser >= burnAmount);
+        require(totalStakedFor(user) >= burnAmount);
 
         // Burn tokens
-        updateCheckpointAtNow(burnsFor[user], burnAmount, false);
+        // TODO: updateCheckpointAtNow is probably not the right way to store burn records (cumulative)
         token.burn(burnAmount);
-
-        // Update total burn checkpoint
+        updateCheckpointAtNow(burnsFor[user], burnAmount, false);
         updateCheckpointAtNow(burnHistory, burnAmount, false);
+
+        // Remove stake
+        updateCheckpointAtNow(stakesFor[user], burnAmount, true);
+        updateCheckpointAtNow(stakeHistory, burnAmount, true);
     }
 
     /**
