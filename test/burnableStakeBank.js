@@ -1,26 +1,32 @@
 const BurnableStakeBank = artifacts.require('BurnableStakeBank')
-//const StakeBank = artifacts.require('StakeBank');
 const ConsensusToken = artifacts.require('ConsensusToken')
 
 contract('Burn dem tokes', ([owner, staker]) => {
   let token, burnBank
+  const tokenCap = 1000
 
   beforeEach(async () => {
-    const tokenCap = 1000
     token = await ConsensusToken.new(tokenCap, { from: owner })
     burnBank = await BurnableStakeBank.new(token.address)
 
     // Mint tokens
     await token.mint(owner, 1000, { from: owner })
-    // Staker gets 100 tokens
-    //await token.transfer(staker, 100, { from: owner })
   })
 
-  it('Stake and burn tokens', async () => {
+  it('Owner stake and burn results in none staked', async () => {
+    // Stake
     await token.approve(burnBank.address, 100, { from: owner })
-    await burnBank.stakeFor(owner, 100, '0x0', { from: owner })
+    await burnBank.stake(100, '0x0', { from: owner })
 
+    // Tokens should be staked
     let staked = (await burnBank.totalStaked()).toNumber()
     assert.equal(staked, 100)
+
+    // Burn
+    await burnBank.burnFor(owner, 100, '0x0', { from: owner })
+
+    // Should no longer be staked
+    staked = (await burnBank.totalStaked()).toNumber()
+    assert.equal(staked, 0)
   })
 })
