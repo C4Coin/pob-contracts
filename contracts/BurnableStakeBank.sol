@@ -81,10 +81,9 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
         require(totalStakedFor(user) >= burnAmount);
 
         // Burn tokens
-        // TODO: updateCheckpointAtNow is probably not the right way to store burn records (cumulative)
-        token.burn(burnAmount);
         updateCheckpointAtNow(burnsFor[user], burnAmount, false);
         updateCheckpointAtNow(burnHistory, burnAmount, false);
+        token.burn(burnAmount);
 
         // Remove stake
         updateCheckpointAtNow(stakesFor[user], burnAmount, true);
