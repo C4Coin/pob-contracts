@@ -70,7 +70,7 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
     }
 
     /**
-     * @notice Burn an amount of tokens for user
+     * @notice Burns an amount of staked tokens for another user
      * @param user Address of the user to burn for.
      * @param burnAmount Amount of tokens to burn.
      * @param __data Data field used for signalling in more complex staking applications.
@@ -78,7 +78,7 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
      * Likely use onlySystemAndNotFinalized at a higher-level not here.
      */
     function burnFor(address user, uint256 burnAmount, bytes __data) public onlyWhenUnlocked {
-        require(totalStakedFor(user) >= burnAmount);
+        require(totalStakedFor(msg.sender) >= burnAmount);
 
         // Burn tokens
         updateCheckpointAtNow(burnsFor[user], burnAmount, false);
@@ -86,7 +86,7 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
         token.burn(burnAmount);
 
         // Remove stake
-        updateCheckpointAtNow(stakesFor[user], burnAmount, true);
+        updateCheckpointAtNow(stakesFor[msg.sender], burnAmount, true);
         updateCheckpointAtNow(stakeHistory, burnAmount, true);
     }
 
