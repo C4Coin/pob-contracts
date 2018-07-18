@@ -128,6 +128,14 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
     }
 
     /**
+     * @notice Returns total tokens burned.
+     * @return amount of tokens burned.
+     */
+    function totalBurned() public view returns (uint256) {
+        return totalBurnedAt(block.number);
+    }
+
+    /**
      * @notice Returns true if history related functions are implemented.
      * @return Bool Are history related functions implemented?
      */
@@ -169,12 +177,31 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
     }
 
     /**
+     * @notice Returns total amount of tokens burned at block for address.
+     * @param addr Address to check.
+     * @param blockNumber Block number to check.
+     * @return amount of tokens burned.
+     */
+    function totalBurnedForAt(address addr, uint256 blockNumber) public view returns (uint256) {
+        return stakedAt(burnsFor[addr], blockNumber);
+    }
+
+    /**
      * @notice Returns the total tokens staked at block.
      * @param blockNumber Block number to check.
      * @return amount of tokens staked.
      */
     function totalStakedAt(uint256 blockNumber) public view returns (uint256) {
         return stakedAt(stakeHistory, blockNumber);
+    }
+
+    /**
+     * @notice Returns the total tokens burned at block.
+     * @param blockNumber Block number to check.
+     * @return amount of tokens burned.
+     */
+    function totalBurnedAt(uint256 blockNumber) public view returns (uint256) {
+        return stakedAt(burnHistory, blockNumber);
     }
 
     /**
