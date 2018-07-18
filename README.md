@@ -1,9 +1,9 @@
-# validator-contracts
+# PoB-contracts
 
-Smart contracts implementing validators
+Smart contracts implementing Proof of Burn consensus
 
-* `develop` — [![CircleCI](https://circleci.com/gh/C4Coin/validator-contracts/tree/develop.svg?style=svg)](https://circleci.com/gh/C4Coin/validator-contracts/tree/develop) [codecov badge]
-* `master` — [![CircleCI](https://circleci.com/gh/C4Coin/validator-contracts/tree/master.svg?style=svg)](https://circleci.com/gh/C4Coin/validator-contracts/tree/master) [codecov badge]
+* `develop` — [![CircleCI](https://circleci.com/gh/C4Coin/PoB-contracts/tree/develop.svg?style=svg)](https://circleci.com/gh/C4Coin/PoB-contracts/tree/develop) [codecov badge]
+* `master` — [![CircleCI](https://circleci.com/gh/C4Coin/PoB-contracts/tree/master.svg?style=svg)](https://circleci.com/gh/C4Coin/PoB-contracts/tree/master) [codecov badge]
 
 ## Overview
 
