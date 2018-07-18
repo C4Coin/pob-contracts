@@ -17,14 +17,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 pragma solidity ^0.4.24;
 
-
-import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
-import 'openzeppelin-solidity/contracts/token/ERC20/StandardBurnableToken.sol';
-import 'openzeppelin-solidity/contracts/token/ERC20/CappedToken.sol';
-/* import 'openzeppelin-solidity/contracts/access/Whitelist.sol'; */
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 
 
-// TODO: Inherit from white list
-contract ConsensusToken is StandardBurnableToken, CappedToken {
+contract IBurnableERC20 is ERC20 {
+    event Burn(address indexed burner, uint256 value);
 
+    function burn(uint256 _value) public;
+    function burnFrom(address _from, uint256 _value) public;
 }
