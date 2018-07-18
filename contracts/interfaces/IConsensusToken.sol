@@ -17,15 +17,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 pragma solidity ^0.4.24;
 
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 
-import './IStakeBank.sol';
 
+contract IConsensusToken is ERC20 {
+    event Burn(address indexed burner, uint256 value);
 
-/**
- * @title Contract for a stake bank which burns tokens
- */
-contract IBurnableStakeBank is IStakeBank {
-    event StakeBurned(address indexed user, uint256 burnAmount, bytes data);
-
-    function burnFor(address user, uint256 burnAmount, bytes data) public;
+    function burn(uint256 _value) external;
+    function burnFrom(address _from, uint256 _value) external;
 }

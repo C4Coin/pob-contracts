@@ -8,5 +8,5 @@ import './IStakeBank.sol';
  * @notice Gives deriving contracts design by contract modifiers
  */
 contract IBalanceStakeBank is IStakeBank {
-    function totalBalances() public constant returns (address[], uint[]);
+    function allStakerBalances() public constant returns (address[], uint[]);
 }
