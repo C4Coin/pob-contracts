@@ -19,8 +19,8 @@ pragma solidity ^0.4.24;
 
 
 import 'openzeppelin-solidity/contracts/token/ERC20/StandardBurnableToken.sol';
-import './IConsensusToken.sol';
+import './IBurnableERC20.sol';
 
 // TODO: Inherit from white list
-contract ConsensusToken is IConsensusToken, StandardBurnableToken {
+contract BurnableERC20 is IBurnableERC20, StandardBurnableToken {
 }

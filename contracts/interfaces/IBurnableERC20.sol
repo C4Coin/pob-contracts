@@ -20,7 +20,7 @@ pragma solidity ^0.4.24;
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 
 
-contract IConsensusToken is ERC20 {
+contract IBurnableERC20 is ERC20 {
     event Burn(address indexed burner, uint256 value);
 
     function burn(uint256 _value) public;

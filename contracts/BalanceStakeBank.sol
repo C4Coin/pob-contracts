@@ -48,7 +48,7 @@ contract BalanceStakeBank is BurnableStakeBank, IBalanceStakeBank {
     mapping (address => bool) public isSorted;
 
     // @param _token Token that can be staked.
-    constructor(IConsensusToken _token) public BurnableStakeBank(_token) {
+    constructor(IBurnableERC20 _token) public BurnableStakeBank(_token) {
         StakeData memory temp = StakeData({ amount: 0, staker: address(0) });
         stakeNodes.push(Node(temp, 0, 0));
     }
