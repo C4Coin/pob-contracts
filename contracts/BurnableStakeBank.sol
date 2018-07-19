@@ -21,7 +21,7 @@ pragma solidity ^0.4.24;
 import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
 import './interfaces/Lockable.sol';
 import './interfaces/IBurnableStakeBank.sol';
-import './interfaces/ConsensusToken.sol';
+import './interfaces/IBurnableERC20.sol';
 
 
 // @title Contract for to keep track of stake (checkpoint history total staked at block) and burn tokens
@@ -33,7 +33,7 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
         uint256 amount;
     }
 
-    StandardBurnableToken public token;
+    IBurnableERC20 public token;
     Checkpoint[] public stakeHistory;
     Checkpoint[] public burnHistory;
     uint256 public stakeLockBlockInterval = 1000;
@@ -42,7 +42,7 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
     mapping (address => Checkpoint[]) public burnsFor;
 
     // @param _token Token that can be staked.
-    constructor(ConsensusToken _token) public {
+    constructor(IBurnableERC20 _token) public {
         require(address(_token) != 0x0);
         token = _token;
     }

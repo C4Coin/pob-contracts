@@ -1,12 +1,12 @@
 const BurnableStakeBank = artifacts.require('BurnableStakeBank')
-const ConsensusToken = artifacts.require('ConsensusToken')
+const BurnableERC20 = artifacts.require('BurnableERC20')
 
 contract('BurnableStakeBank contract', ([owner, staker]) => {
   let token, burnBank
   const tokenCap = 1000
 
   beforeEach(async () => {
-    token = await ConsensusToken.new(tokenCap, { from: owner })
+    token = await BurnableERC20.new(tokenCap, { from: owner })
     burnBank = await BurnableStakeBank.new(token.address)
 
     // Mint tokens

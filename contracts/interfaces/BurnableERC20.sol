@@ -18,14 +18,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.24;
 
 
-import './IStakeBank.sol';
+import 'openzeppelin-solidity/contracts/token/ERC20/StandardBurnableToken.sol';
+import 'openzeppelin-solidity/contracts/token/ERC20/CappedToken.sol';
+import './IBurnableERC20.sol';
 
-
-/**
- * @title Contract for a stake bank which burns tokens
- */
-contract IBurnableStakeBank is IStakeBank {
-    event StakeBurned(address indexed user, uint256 burnAmount, bytes data);
-
-    function burnFor(address user, uint256 burnAmount, bytes data) public;
+//   constructor (uint256 _cap) CappedToken(_cap) public {}
+contract BurnableERC20 is StandardBurnableToken, CappedToken {
+    constructor (uint256 _cap) CappedToken(_cap) public {}
 }
