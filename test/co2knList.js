@@ -1,7 +1,7 @@
 const Co2knList = artifacts.require('Co2knList')
 const BurnableERC20 = artifacts.require('BurnableERC20')
 
-contract('Co2knList contract', ([owner]) => {
+contract('Co2knList contract', ([owner, pleb]) => {
   let hytchToken
 
   beforeEach(async () => {
@@ -38,7 +38,7 @@ contract('Co2knList contract', ([owner]) => {
   // Test setToken
   it('Should not be able to setToken if not owner', async () => {
     try {
-      await co2kn.setToken('Hytch')
+      await co2knlist.setToken('Hytch', hytchToken.address, { from: pleb })
       assert.fail("Expected a revert but it didn't happen...")
     } catch (e) {
       const revertFound = e.message.search('revert') >= 0
