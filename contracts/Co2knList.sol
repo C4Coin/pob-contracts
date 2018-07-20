@@ -23,15 +23,15 @@ contract Co2knList is Ownable {
     mapping (bytes32 => address) public co2kns;
 
     function contains(bytes32 __data) view public returns (bool) {
-       return co2kns[__data] == address(0) ? false : true;
+        return co2kns[__data] == address(0) ? false : true;
     }
 
     function getAddress(bytes32 __data) view public returns (address) {
-       require( co2kns[__data] != address(0) );
-       return co2kns[__data];
+        require( co2kns[__data] != address(0) );
+        return co2kns[__data];
     }
 
     function setToken(bytes32 __data, address _addr) onlyOwner public {
-       co2kns[__data] = _addr;
+        co2kns[__data] = _addr;
     }
 }
