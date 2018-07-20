@@ -22,6 +22,7 @@ import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
 import './interfaces/Lockable.sol';
 import './interfaces/IBurnableStakeBank.sol';
 import './interfaces/IBurnableERC20.sol';
+import './Co2knList.sol';
 
 
 // @title Contract for to keep track of stake (checkpoint history total staked at block) and burn tokens
@@ -33,7 +34,8 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
         uint256 amount;
     }
 
-    IBurnableERC20 public token;
+    //IBurnableERC20 public token;
+    Co2knList whitelist;
     Checkpoint[] public stakeHistory;
     Checkpoint[] public burnHistory;
     uint256 public stakeLockBlockInterval = 1000;
@@ -42,9 +44,11 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
     mapping (address => Checkpoint[]) public burnsFor;
 
     // @param _token Token that can be staked.
-    constructor(IBurnableERC20 _token) public {
-        require(address(_token) != 0x0);
-        token = _token;
+    //constructor(IBurnableERC20 _token) public {
+    constructor(Co2knList _list) public {
+        require(address(_list) != 0x0);
+        whitelist = _list;
+        //token = _token;
     }
 
     /**
@@ -65,6 +69,7 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
     function stakeFor(address user, uint256 amount, bytes __data) public onlyWhenUnlocked onlyWhenStakeInterval {
         updateCheckpointAtNow(stakesFor[user], amount, false);
         updateCheckpointAtNow(stakeHistory, amount, false);
+        IBurnableERC20 token = IBurnableERC20( whitelist.getAddress(__data) );
 
         require(token.transferFrom(msg.sender, address(this), amount));
     }
@@ -83,6 +88,7 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
         // Burn tokens
         updateCheckpointAtNow(burnsFor[user], burnAmount, false);
         updateCheckpointAtNow(burnHistory, burnAmount, false);
+        IBurnableERC20 token = IBurnableERC20( whitelist.getAddress(__data) );
         token.burn(burnAmount);
 
         // Remove stake
@@ -101,6 +107,7 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
         updateCheckpointAtNow(stakesFor[msg.sender], amount, true);
         updateCheckpointAtNow(stakeHistory, amount, true);
 
+        IBurnableERC20 token = IBurnableERC20( whitelist.getAddress(__data) );
         require(token.transfer(msg.sender, amount));
     }
 
@@ -147,9 +154,11 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
      * @notice Returns the token address.
      * @return Address of token.
      */
+    /*
     function token() public view returns (address) {
         return token;
     }
+    */
 
     /**
      * @notice Returns last block address staked at.
