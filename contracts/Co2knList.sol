@@ -31,7 +31,7 @@ contract Co2knList is Ownable {
        return co2kns[__data];
     }
 
-    function setToken(bytes32 __data, address _addr) onlyOwner public {
+    function setToken(bytes32 __data, address _addr) public {
        co2kns[__data] = _addr;
     }
 }
