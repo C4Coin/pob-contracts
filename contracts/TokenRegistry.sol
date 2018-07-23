@@ -19,19 +19,19 @@ pragma solidity ^0.4.24;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
-contract Co2knList is Ownable {
-    mapping (bytes32 => address) public co2kns;
+contract TokenRegistry is Ownable {
+    mapping (bytes32 => address) public tokens;
 
-    function contains(bytes32 __data) view public returns (bool) {
-        return co2kns[__data] == address(0) ? false : true;
+    function contains(bytes32 tokenId) view public returns (bool) {
+        return tokens[tokenId] == address(0) ? false : true;
     }
 
-    function getAddress(bytes32 __data) view public returns (address) {
-        require( co2kns[__data] != address(0) );
-        return co2kns[__data];
+    function getAddress(bytes32 tokenId) view public returns (address) {
+        require( tokens[tokenId] != address(0) );
+        return tokens[tokenId];
     }
 
-    function setToken(bytes32 __data, address _addr) onlyOwner public {
-        co2kns[__data] = _addr;
+    function setToken(bytes32 tokenId, address _addr) onlyOwner public {
+        tokens[tokenId] = _addr;
     }
 }
