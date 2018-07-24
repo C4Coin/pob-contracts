@@ -286,6 +286,7 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
     }
 
     function _bytesToBytes32(bytes b, uint offset) private pure returns (bytes32) {
+        require(b.length < 32);
         bytes32 out;
 
         for (uint i = 0; i < b.length; i++) {
