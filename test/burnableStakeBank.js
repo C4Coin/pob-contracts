@@ -1,5 +1,5 @@
 const BurnableStakeBank = artifacts.require('BurnableStakeBank')
-const Co2knList = artifacts.require('Co2knList')
+const TokenRegistry = artifacts.require('TokenRegistry')
 const BurnableERC20 = artifacts.require('BurnableERC20')
 
 contract('BurnableStakeBank contract', ([owner, staker]) => {
@@ -11,7 +11,7 @@ contract('BurnableStakeBank contract', ([owner, staker]) => {
     token = await BurnableERC20.new(tokenCap, { from: owner })
 
     // Create co2kn whitelist and add token
-    co2knlist = await Co2knList.new({ from: owner })
+    co2knlist = await TokenRegistry.new({ from: owner })
     await co2knlist.setToken('testToken', token.address, { from: owner })
 
     // Create BurnableStakeBank

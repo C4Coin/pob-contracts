@@ -20,13 +20,14 @@ pragma solidity ^0.4.24;
 
 import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
 import './interfaces/Lockable.sol';
-//import './interfaces/IBurnableStakeBank.sol';
+import './interfaces/IBurnableStakeBank.sol';
+import './interfaces/IBurnableERC20.sol';
 import './interfaces/BurnableERC20.sol';
-import './Co2knList.sol';
+import './TokenRegistry.sol';
 
 
 // @title Contract for to keep track of stake (checkpoint history total staked at block) and burn tokens
-contract BurnableStakeBank is Lockable {
+contract BurnableStakeBank is IBurnableStakeBank, Lockable {
     using SafeMath for uint256;
 
     struct Checkpoint {
@@ -34,7 +35,7 @@ contract BurnableStakeBank is Lockable {
         uint256 amount;
     }
 
-    Co2knList whitelist;
+    TokenRegistry whitelist;
     Checkpoint[] public stakeHistory;
     Checkpoint[] public burnHistory;
     uint256 public stakeLockBlockInterval = 1000;
@@ -43,7 +44,7 @@ contract BurnableStakeBank is Lockable {
     mapping (address => Checkpoint[]) public burnsFor;
 
     // @param _token Token that can be staked.
-    constructor(Co2knList _list) public {
+    constructor(TokenRegistry _list) public {
         require(address(_list) != 0x0);
         whitelist = _list;
     }
@@ -53,7 +54,7 @@ contract BurnableStakeBank is Lockable {
      * @param amount Amount of tokens to stake.
      * @param data Data field used for signalling in more complex staking applications.
      */
-    function stake(uint256 amount, bytes32 data) public {
+    function stake(uint256 amount, bytes data) public {
         stakeFor(msg.sender, amount, data);
     }
 
@@ -63,10 +64,14 @@ contract BurnableStakeBank is Lockable {
      * @param amount Amount of tokens to stake.
      * @param __data Data field used for signalling in more complex staking applications. //stakeLockBlockInterval
      */
-    function stakeFor(address user, uint256 amount, bytes32 __data) public onlyWhenUnlocked onlyWhenStakeInterval {
+    function stakeFor(address user, uint256 amount, bytes __data) public onlyWhenUnlocked onlyWhenStakeInterval {
         updateCheckpointAtNow(stakesFor[user], amount, false);
         updateCheckpointAtNow(stakeHistory, amount, false);
-        BurnableERC20 token = BurnableERC20( whitelist.getAddress(__data) );
+
+        // Convert bytes to bytes32
+        bytes32 tokenId = _bytesToBytes32(__data, 0);
+
+        IBurnableERC20 token = BurnableERC20( whitelist.getAddress(tokenId) );
 
         require(token.transferFrom(msg.sender, address(this), amount));
     }
@@ -79,13 +84,16 @@ contract BurnableStakeBank is Lockable {
      * TODO: should we use onlyWhenUnlocked or onlySystemAndNotFinalized?
      * Likely use onlySystemAndNotFinalized at a higher-level not here.
      */
-    function burnFor(address user, uint256 burnAmount, bytes32 __data) public onlyWhenUnlocked {
+    function burnFor(address user, uint256 burnAmount, bytes __data) public onlyWhenUnlocked {
         require(totalStakedFor(msg.sender) >= burnAmount);
+
+        // Convert bytes to bytes32
+        bytes32 tokenId = _bytesToBytes32(__data, 0);
 
         // Burn tokens
         updateCheckpointAtNow(burnsFor[user], burnAmount, false);
         updateCheckpointAtNow(burnHistory, burnAmount, false);
-        BurnableERC20 token = BurnableERC20( whitelist.getAddress(__data) );
+        IBurnableERC20 token = BurnableERC20( whitelist.getAddress(tokenId) );
         token.burn(burnAmount);
 
         // Remove stake
@@ -98,13 +106,16 @@ contract BurnableStakeBank is Lockable {
      * @param amount Amount of tokens to unstake.
      * @param __data Data field used for signalling in more complex staking applications.
      */
-    function unstake(uint256 amount, bytes32 __data) public onlyWhenStakeInterval {
+    function unstake(uint256 amount, bytes __data) public onlyWhenStakeInterval {
         require(totalStakedFor(msg.sender) >= amount);
 
         updateCheckpointAtNow(stakesFor[msg.sender], amount, true);
         updateCheckpointAtNow(stakeHistory, amount, true);
 
-        BurnableERC20 token = BurnableERC20( whitelist.getAddress(__data) );
+        // Convert bytes to bytes32
+        bytes32 tokenId = _bytesToBytes32(__data, 0);
+
+        IBurnableERC20 token = BurnableERC20( whitelist.getAddress(tokenId) );
         require(token.transfer(msg.sender, amount));
     }
 
@@ -151,11 +162,9 @@ contract BurnableStakeBank is Lockable {
      * @notice Returns the token address.
      * @return Address of token.
      */
-    /*
     function token() public view returns (address) {
-        return token;
+        return address(0);
     }
-    */
 
     /**
      * @notice Returns last block address staked at.
@@ -275,4 +284,13 @@ contract BurnableStakeBank is Lockable {
         require(block.number % stakeLockBlockInterval != 0);
         _;
     }
+
+    function _bytesToBytes32(bytes b, uint offset) private pure returns (bytes32) {
+        bytes32 out;
+
+        for (uint i = 0; i < b.length; i++) {
+            out |= bytes32(b[offset + i] & 0xFF) >> (i * 8);
+        }
+        return out;
+   }
 }

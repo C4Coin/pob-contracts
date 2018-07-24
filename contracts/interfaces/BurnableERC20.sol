@@ -22,7 +22,6 @@ import 'openzeppelin-solidity/contracts/token/ERC20/StandardBurnableToken.sol';
 import 'openzeppelin-solidity/contracts/token/ERC20/CappedToken.sol';
 import './IBurnableERC20.sol';
 
-//   constructor (uint256 _cap) CappedToken(_cap) public {}
-contract BurnableERC20 is StandardBurnableToken, CappedToken {
+contract BurnableERC20 is IBurnableERC20, StandardBurnableToken, CappedToken {
     constructor (uint256 _cap) CappedToken(_cap) public {}
 }

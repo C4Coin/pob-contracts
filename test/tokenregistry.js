@@ -1,7 +1,7 @@
-const Co2knList = artifacts.require('Co2knList')
+const TokenRegistry = artifacts.require('TokenRegistry')
 const BurnableERC20 = artifacts.require('BurnableERC20')
 
-contract('Co2knList contract', ([owner, pleb]) => {
+contract('TokenRegistry contract', ([owner, pleb]) => {
   let hytchToken
 
   beforeEach(async () => {
@@ -9,7 +9,7 @@ contract('Co2knList contract', ([owner, pleb]) => {
     hytchToken = await BurnableERC20.new(1000, { from: owner })
 
     // Create co2kn whitelist and add hytch token
-    co2knlist = await Co2knList.new({ from: owner })
+    co2knlist = await TokenRegistry.new({ from: owner })
     await co2knlist.setToken('Hytch', hytchToken.address, { from: owner })
   })
 
@@ -38,7 +38,7 @@ contract('Co2knList contract', ([owner, pleb]) => {
   // Test setToken
   it('Should not be able to setToken if not owner', async () => {
     try {
-      await co2knlist.setToken('Hytch', hytchToken.address, { from: pleb })
+      await co2knlist.setToken('Nada', hytchToken.address, { from: pleb })
       assert.fail("Expected a revert but it didn't happen...")
     } catch (e) {
       const revertFound = e.message.search('revert') >= 0
