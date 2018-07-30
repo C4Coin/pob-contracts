@@ -1,3 +1,5 @@
+pragma solidity ^0.4.24;
+
 contract Fts {
    function _newRandomNumber(bytes32 seed) internal returns (uint256) {
       return uint256( keccak256(seed) );
