@@ -5,6 +5,7 @@ const BurnableERC20 = artifacts.require('BurnableERC20')
 contract('BurnableStakeBank contract', ([owner, staker]) => {
   let token, burnBank, co2knlist
   const tokenCap = 1000
+  const minimumStake = 50
 
   beforeEach(async () => {
     // Create co2kn instance
@@ -15,7 +16,9 @@ contract('BurnableStakeBank contract', ([owner, staker]) => {
     await co2knlist.setToken('testToken', token.address, { from: owner })
 
     // Create BurnableStakeBank
-    burnBank = await BurnableStakeBank.new(co2knlist.address, { from: owner })
+    burnBank = await BurnableStakeBank.new(co2knlist.address, minimumStake, {
+      from: owner
+    })
 
     // Mint tokens
     await token.mint(owner, 1000, { from: owner })
@@ -27,6 +30,31 @@ contract('BurnableStakeBank contract', ([owner, staker]) => {
     // Tokens should be staked
     let staked = (await burnBank.totalStaked()).toNumber()
     assert.equal(staked, 100)
+  })
+
+  it('Should not be able to stake lower than minimum stake', async () => {
+    try {
+      // Stake lower than minimum
+      await token.approve(burnBank.address, 30, { from: owner })
+      await burnBank.stake(30, 'testToken', { from: owner })
+
+      assert.fail("Expected a revert but it didn't happen...")
+    } catch (e) {
+      const revertFound = e.message.search('revert') >= 0
+      assert(revertFound, `Expected "revert", got ${e} instead`)
+    }
+  })
+
+  it('Should not be able to unstake to lower than minimum stake', async () => {
+    try {
+      // Unstake to lower than minimum
+      await burnBank.unstake(80, 'testToken', { from: owner })
+
+      assert.fail("Expected a revert but it didn't happen...")
+    } catch (e) {
+      const revertFound = e.message.search('revert') >= 0
+      assert(revertFound, `Expected "revert", got ${e} instead`)
+    }
   })
 
   it('Owner stake and burn, results in none staked', async () => {

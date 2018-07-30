@@ -39,14 +39,16 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
     Checkpoint[] public stakeHistory;
     Checkpoint[] public burnHistory;
     uint256 public stakeLockBlockInterval = 1000;
+    uint256 minimumStake;
 
     mapping (address => Checkpoint[]) public stakesFor;
     mapping (address => Checkpoint[]) public burnsFor;
 
     // @param _token Token that can be staked.
-    constructor(TokenRegistry _list) public {
+    constructor(TokenRegistry _list, uint256 _minimumStake) public {
         require(address(_list) != 0x0);
         whitelist = _list;
+        minimumStake = _minimumStake;
     }
 
     /**
@@ -65,6 +67,8 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
      * @param __data Data field used for signalling in more complex staking applications. //stakeLockBlockInterval
      */
     function stakeFor(address user, uint256 amount, bytes __data) public onlyWhenUnlocked onlyWhenStakeInterval {
+        require( amount >= minimumStake );
+
         updateCheckpointAtNow(stakesFor[user], amount, false);
         updateCheckpointAtNow(stakeHistory, amount, false);
 
@@ -108,6 +112,11 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
      */
     function unstake(uint256 amount, bytes __data) public onlyWhenStakeInterval {
         require(totalStakedFor(msg.sender) >= amount);
+
+        uint256 preStake   = totalStakedFor(msg.sender);
+        uint256 postStake  = preStake - amount;
+        require(postStake >= minimumStake || postStake == 0);
+
 
         updateCheckpointAtNow(stakesFor[msg.sender], amount, true);
         updateCheckpointAtNow(stakeHistory, amount, true);
