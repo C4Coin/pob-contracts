@@ -17,11 +17,21 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 pragma solidity ^0.4.24;
 
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
-import 'openzeppelin-solidity/contracts/token/ERC20/StandardBurnableToken.sol';
-import 'openzeppelin-solidity/contracts/token/ERC20/CappedToken.sol';
-import './IBurnableERC20.sol';
+contract TokenRegistry is Ownable {
+    mapping (bytes32 => address) public tokens;
 
-contract BurnableERC20 is IBurnableERC20, StandardBurnableToken, CappedToken {
-    constructor (uint256 _cap) CappedToken(_cap) public {}
+    function contains(bytes32 tokenId) view public returns (bool) {
+        return tokens[tokenId] == address(0) ? false : true;
+    }
+
+    function getAddress(bytes32 tokenId) view public returns (address) {
+        require( tokens[tokenId] != address(0) );
+        return tokens[tokenId];
+    }
+
+    function setToken(bytes32 tokenId, address _addr) onlyOwner public {
+        tokens[tokenId] = _addr;
+    }
 }

@@ -22,6 +22,8 @@ import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
 import './interfaces/Lockable.sol';
 import './interfaces/IBurnableStakeBank.sol';
 import './interfaces/IBurnableERC20.sol';
+import './interfaces/BurnableERC20.sol';
+import './TokenRegistry.sol';
 
 
 // @title Contract for to keep track of stake (checkpoint history total staked at block) and burn tokens
@@ -33,16 +35,18 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
         uint256 amount;
     }
 
-    IBurnableERC20 public token;
+    TokenRegistry whitelist;
     Checkpoint[] public stakeHistory;
+    Checkpoint[] public burnHistory;
     uint256 public stakeLockBlockInterval = 1000;
 
     mapping (address => Checkpoint[]) public stakesFor;
+    mapping (address => Checkpoint[]) public burnsFor;
 
     // @param _token Token that can be staked.
-    constructor(IBurnableERC20 _token) public {
-        require(address(_token) != 0x0);
-        token = _token;
+    constructor(TokenRegistry _list) public {
+        require(address(_list) != 0x0);
+        whitelist = _list;
     }
 
     /**
@@ -64,11 +68,16 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
         updateCheckpointAtNow(stakesFor[user], amount, false);
         updateCheckpointAtNow(stakeHistory, amount, false);
 
+        // Convert bytes to bytes32
+        bytes32 tokenId = _bytesToBytes32(__data, 0);
+
+        IBurnableERC20 token = BurnableERC20( whitelist.getAddress(tokenId) );
+
         require(token.transferFrom(msg.sender, address(this), amount));
     }
 
     /**
-     * @notice Burn an amount of tokens for user
+     * @notice Burns an amount of staked tokens for another user
      * @param user Address of the user to burn for.
      * @param burnAmount Amount of tokens to burn.
      * @param __data Data field used for signalling in more complex staking applications.
@@ -76,23 +85,20 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
      * Likely use onlySystemAndNotFinalized at a higher-level not here.
      */
     function burnFor(address user, uint256 burnAmount, bytes __data) public onlyWhenUnlocked {
-        // Verify that last stake is sufficient for burn
-        uint256 lastStakedForUser = lastStakedFor(user);
-        require(lastStakedForUser >= burnAmount);
+        require(totalStakedFor(msg.sender) >= burnAmount);
+
+        // Convert bytes to bytes32
+        bytes32 tokenId = _bytesToBytes32(__data, 0);
 
         // Burn tokens
+        updateCheckpointAtNow(burnsFor[user], burnAmount, false);
+        updateCheckpointAtNow(burnHistory, burnAmount, false);
+        IBurnableERC20 token = BurnableERC20( whitelist.getAddress(tokenId) );
         token.burn(burnAmount);
 
-        // Update staking checkpoint for user
-        require(stakesFor[user].length > 0);
-        uint256 lastCheckpoint = stakesFor[user].length-1;
-        Checkpoint storage userCheckpoint = stakesFor[user][lastCheckpoint];
-        uint256 newBalance = userCheckpoint.amount.sub(burnAmount);
-        updateCheckpointAtNow(stakesFor[user], newBalance, false);
-
-        // Update total stake checkpoint
-        uint totalStake = totalStaked();
-        updateCheckpointAtNow(stakeHistory, totalStake - burnAmount, false);
+        // Remove stake
+        updateCheckpointAtNow(stakesFor[msg.sender], burnAmount, true);
+        updateCheckpointAtNow(stakeHistory, burnAmount, true);
     }
 
     /**
@@ -106,6 +112,10 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
         updateCheckpointAtNow(stakesFor[msg.sender], amount, true);
         updateCheckpointAtNow(stakeHistory, amount, true);
 
+        // Convert bytes to bytes32
+        bytes32 tokenId = _bytesToBytes32(__data, 0);
+
+        IBurnableERC20 token = BurnableERC20( whitelist.getAddress(tokenId) );
         require(token.transfer(msg.sender, amount));
     }
 
@@ -133,6 +143,14 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
     }
 
     /**
+     * @notice Returns total tokens burned.
+     * @return amount of tokens burned.
+     */
+    function totalBurned() public view returns (uint256) {
+        return totalBurnedAt(block.number);
+    }
+
+    /**
      * @notice Returns true if history related functions are implemented.
      * @return Bool Are history related functions implemented?
      */
@@ -145,7 +163,7 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
      * @return Address of token.
      */
     function token() public view returns (address) {
-        return token;
+        return address(0);
     }
 
     /**
@@ -174,12 +192,31 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
     }
 
     /**
+     * @notice Returns total amount of tokens burned at block for address.
+     * @param addr Address to check.
+     * @param blockNumber Block number to check.
+     * @return amount of tokens burned.
+     */
+    function totalBurnedForAt(address addr, uint256 blockNumber) public view returns (uint256) {
+        return stakedAt(burnsFor[addr], blockNumber);
+    }
+
+    /**
      * @notice Returns the total tokens staked at block.
      * @param blockNumber Block number to check.
      * @return amount of tokens staked.
      */
     function totalStakedAt(uint256 blockNumber) public view returns (uint256) {
         return stakedAt(stakeHistory, blockNumber);
+    }
+
+    /**
+     * @notice Returns the total tokens burned at block.
+     * @param blockNumber Block number to check.
+     * @return amount of tokens burned.
+     */
+    function totalBurnedAt(uint256 blockNumber) public view returns (uint256) {
+        return stakedAt(burnHistory, blockNumber);
     }
 
     /**
@@ -195,10 +232,12 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
             return;
         }
 
+        // Create new checkpoint for block containing latest stake amount
         if (history[length-1].at < block.number) {
             history.push(Checkpoint({at: block.number, amount: history[length-1].amount}));
         }
 
+        // Add/sub the difference in stake to new checkpoint
         Checkpoint storage checkpoint = history[length];
 
         if (isUnstake) {
@@ -245,4 +284,14 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
         require(block.number % stakeLockBlockInterval != 0);
         _;
     }
+
+    function _bytesToBytes32(bytes b, uint offset) private pure returns (bytes32) {
+        require(b.length < 32);
+        bytes32 out;
+
+        for (uint i = 0; i < b.length; i++) {
+            out |= bytes32(b[offset + i] & 0xFF) >> (i * 8);
+        }
+        return out;
+   }
 }
