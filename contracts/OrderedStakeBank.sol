@@ -18,14 +18,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.24;
 
 
-import './interfaces/IBalanceStakeBank.sol';
 import './BurnableStakeBank.sol';
 import './TokenRegistry.sol';
 
 /**
- * @title Contract for a stake bank that allows access to staker account balances
+ * @title Contract for a stake bank that keeps stakes ordered ascending by staker address
  */
-contract BalanceStakeBank is BurnableStakeBank, IBalanceStakeBank {
+contract OrderedStakeBank is BurnableStakeBank {
     // Staker and staker balance
     struct StakeData {
         uint amount;

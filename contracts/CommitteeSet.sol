@@ -21,11 +21,11 @@ pragma solidity ^0.4.24;
 import './interfaces/IValidatorSet.sol';
 import './interfaces/LockableSeed.sol';
 import './ConsortiumSet.sol';
-import './PublicStakingSet.sol';
+import './PublicSet.sol';
 
 
-// @title Contract to create epoch committee from consortium and public validators
-contract EpochCommitteeSet is IValidatorSet, LockableSeed {
-    ConsortiumSet private consortiumSet;
-    PublicStakingSet private publicSet;
+// @title Contract to create dynasty committee from consortium and public validators
+contract CommitteeSet is IValidatorSet, LockableSeed {
+    /* ConsortiumSet private consortiumSet = new ConsortiumSet(); */
+    /* PublicSet private publicSet = new PublicSet(); */
 }

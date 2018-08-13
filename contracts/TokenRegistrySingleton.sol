@@ -17,12 +17,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 pragma solidity ^0.4.24;
 
+import './TokenRegistry.sol';
 
-import './interfaces/IValidatorSet.sol';
-import './DelayedStakeBank.sol';
-
-
-// @title Contract for public validators that wraps the stake bank used by public stakers
-contract PublicStakingSet is IValidatorSet {
-    DelayedStakeBank private delayedStakeBank; // TODO: determine highest-level stake bank impl.
+library TokenRegistrySingleton {
+    function instance() public returns (TokenRegistry) {
+        return new TokenRegistry();
+    }
 }
