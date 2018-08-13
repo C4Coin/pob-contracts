@@ -55,16 +55,9 @@ contract ConsortiumSet is IValidatorSet, InitialConsortiumSet {
         AddressVotes.Data benignMisbehaviour;
     }
 
-    // System address, used by the block sealer.
-    address private constant SYSTEM_ADDRESS = 0x00fffffffffffffffffffffffffffffffffffffffe;
-    // Support can not be added once this number of validators is reached.
-    uint private constant MAX_VALIDATORS = 30;
-    // Time after which the validators will report a validator as malicious.
-    uint private constant MAX_INACTIVITY = 6 hours;
-    // Ignore misbehaviour older than this number of blocks.
-    uint private constant RECENT_BLOCKS = 20;
-
     // STATE
+    // Support can not be added once this number of validators is reached.
+    uint internal constant MAX_VALIDATORS = 30;
 
     // Current list of addresses entitled to participate in the consensus.
     address[] private validatorsList;

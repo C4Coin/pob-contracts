@@ -23,14 +23,13 @@ library ChainSpecRegistry {
         // Built-in chainspec contracts start at offset
         uint256 offset = 0x100;
 
-        // TODO: Add secret sharing contracts
-        bytes32[6] memory _contractHashes = [
+        // TODO: Add block reward and secret sharing contracts
+        bytes32[5] memory _contractHashes = [
             keccak256("CommitteeSet"),
             keccak256("ConsortiumSet"),
             keccak256("PublicSet"),
             keccak256("PublicStakeBank"),
-            keccak256("TokenRegistry"),
-            keccak256("BlockReward")
+            keccak256("TokenRegistry")
         ];
 
         for (uint256 i=0; i < _contractHashes.length; i++) {

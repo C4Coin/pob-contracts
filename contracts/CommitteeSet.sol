@@ -21,11 +21,45 @@ pragma solidity ^0.4.24;
 import './interfaces/IValidatorSet.sol';
 import './interfaces/LockableSeed.sol';
 import './ConsortiumSet.sol';
+import './ConsortiumSetSingleton.sol';
 import './PublicSet.sol';
+import './PublicSetSingleton.sol';
 
 
-// @title Contract to create dynasty committee from consortium and public validators
+// @title Contract to create committee from consortium and public validators
+// @notice Committees change every dynasty
 contract CommitteeSet is IValidatorSet, LockableSeed {
-    /* ConsortiumSet private consortiumSet = new ConsortiumSet(); */
-    /* PublicSet private publicSet = new PublicSet(); */
+    ConsortiumSet private consortiumSet = ConsortiumSetSingleton.instance();
+    PublicSet private publicSet = PublicSetSingleton.instance();
+
+    address[] private validatorsList;
+
+    constructor() public {
+        validatorsList.push(address(0));
+    }
+
+    /// Get current validator set (last enacted or initial if no changes ever made)
+    function getValidators() public constant returns (address[]) {
+        return validatorsList;
+    }
+
+    /// Called when an initiated change reaches finality and is activated.
+    /// Only valid when msg.sender == SYSTEM (EIP96, 2**160 - 2)
+    ///
+    /// Also called when the contract is first enabled for consensus. In this case,
+    /// the "change" finalized is the activation of the initial set.
+    function finalizeChange() public {
+
+    }
+
+    // Reporting functions: operate on current validator set.
+    // malicious behavior requires proof, which will vary by engine.
+
+    function reportBenign(address validator, uint256 blockNumber) public {
+
+    }
+
+    function reportMalicious(address validator, uint256 blockNumber, bytes proof) public {
+
+    }
 }

@@ -26,4 +26,37 @@ import './PublicStakeBankSingleton.sol';
 // @title Contract for public validators that wraps the stake bank used by public stakers
 contract PublicSet is IValidatorSet {
     PublicStakeBank private publicStakeBank = PublicStakeBankSingleton.instance();
+
+    uint internal constant MAX_VALIDATORS = 10;
+
+    address[] private validatorsList;
+
+    constructor() public {
+        validatorsList.push(address(0));
+    }
+
+    /// Get current validator set (last enacted or initial if no changes ever made)
+    function getValidators() public constant returns (address[]) {
+        return validatorsList;
+    }
+
+    /// Called when an initiated change reaches finality and is activated.
+    /// Only valid when msg.sender == SYSTEM (EIP96, 2**160 - 2)
+    ///
+    /// Also called when the contract is first enabled for consensus. In this case,
+    /// the "change" finalized is the activation of the initial set.
+    function finalizeChange() public {
+
+    }
+
+    // Reporting functions: operate on current validator set.
+    // malicious behavior requires proof, which will vary by engine.
+
+    function reportBenign(address validator, uint256 blockNumber) public {
+
+    }
+
+    function reportMalicious(address validator, uint256 blockNumber, bytes proof) public {
+
+    }
 }

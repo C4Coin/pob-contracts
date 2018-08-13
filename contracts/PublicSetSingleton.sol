@@ -17,18 +17,22 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 pragma solidity ^0.4.24;
 
-import './ChainSpecRegistry.sol';
 
-// @title Library which returns address of built in chainspec contracts if enabled
-library ChainSpec {
-    // @notice: CLI build automation should replace false with true during pre-compile
-    bool public constant _enabledFlag = false;
+import './PublicSet.sol';
+import './ChainSpec.sol';
 
-    function isEnabled() constant returns (bool) {
-        return _enabledFlag;
-    }
+/**
+ * @title Library to access singleton public validator set
+ */
+library PublicSetSingleton {
+    PublicSet private constant _publicSet = new PublicSet();
 
-    function addrOf(bytes32 contractHash) constant returns (address) {
-        return ChainSpecRegistry.indexOf(contractHash);
+    function instance() public constant returns (PublicSet) {
+        if (ChainSpec.isEnabled()) {
+            return PublicSet(ChainSpec.addrOf(keccak256("PublicSet")));
+        }
+        else {
+            return _publicSet;
+        }
     }
 }
