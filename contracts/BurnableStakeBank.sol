@@ -35,7 +35,7 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
         uint256 amount;
     }
 
-    TokenRegistry whitelist;
+    TokenRegistry tokenRegistry;
     Checkpoint[] public stakeHistory;
     Checkpoint[] public burnHistory;
     uint256 public stakeLockBlockInterval = 1000;
@@ -44,10 +44,13 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
     mapping (address => Checkpoint[]) public stakesFor;
     mapping (address => Checkpoint[]) public burnsFor;
 
-    // @param _token Token that can be staked.
-    constructor(TokenRegistry _list, uint256 _minimumStake) public {
-        require(address(_list) != 0x0);
-        whitelist = _list;
+    /**
+     * @param _tokenRegistry Token registry that contains white listed tokens.
+     * @param _minimumStake Min threshold of amount that can be staked.
+     */
+    constructor(TokenRegistry _tokenRegistry, uint256 _minimumStake) public {
+        require(address(_tokenRegistry) != 0x0);
+        tokenRegistry = _tokenRegistry;
         minimumStake = _minimumStake;
     }
 
@@ -75,7 +78,7 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
         // Convert bytes to bytes32
         bytes32 tokenId = _bytesToBytes32(__data, 0);
 
-        IBurnableERC20 token = BurnableERC20( whitelist.getAddress(tokenId) );
+        IBurnableERC20 token = BurnableERC20( tokenRegistry.getAddress(tokenId) );
 
         require(token.transferFrom(msg.sender, address(this), amount));
     }
@@ -97,7 +100,7 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
         // Burn tokens
         updateCheckpointAtNow(burnsFor[user], burnAmount, false);
         updateCheckpointAtNow(burnHistory, burnAmount, false);
-        IBurnableERC20 token = BurnableERC20( whitelist.getAddress(tokenId) );
+        IBurnableERC20 token = BurnableERC20( tokenRegistry.getAddress(tokenId) );
         token.burn(burnAmount);
 
         // Remove stake
@@ -124,7 +127,7 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
         // Convert bytes to bytes32
         bytes32 tokenId = _bytesToBytes32(__data, 0);
 
-        IBurnableERC20 token = BurnableERC20( whitelist.getAddress(tokenId) );
+        IBurnableERC20 token = BurnableERC20( tokenRegistry.getAddress(tokenId) );
         require(token.transfer(msg.sender, amount));
     }
 
