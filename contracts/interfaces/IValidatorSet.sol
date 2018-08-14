@@ -22,14 +22,6 @@ pragma solidity ^0.4.24;
  * @title Interface for a validator set that can interface with parity engines
  */
 contract IValidatorSet {
-    /// Constants used by all validator sets
-    // System address, used by the block sealer.
-    address internal constant SYSTEM_ADDRESS = 0x00fffffffffffffffffffffffffffffffffffffffe;
-    // Time after which the validators will report a validator as malicious.
-    uint internal constant MAX_INACTIVITY = 6 hours;
-    // Ignore misbehaviour older than this number of blocks.
-    uint internal constant RECENT_BLOCKS = 20;
-
     /// Issue this log event to signal a desired change in validator set.
     /// This will not lead to a change in active validator set until
     /// finalizeChange is called.

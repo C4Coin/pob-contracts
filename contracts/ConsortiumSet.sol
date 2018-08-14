@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.24;
 
 
-import './interfaces/IValidatorSet.sol';
+import './interfaces/SystemValidatorSet.sol';
 import './libraries/AddressVotes.sol';
 import './InitialConsortiumSet.sol';
 
@@ -31,7 +31,7 @@ import './InitialConsortiumSet.sol';
  * @notice Benign misbehaviour causes supprt removal if its called again after MAX_INACTIVITY.
  * @notice Benign misbehaviour can be absolved before being called the second time.
  */
-contract ConsortiumSet is IValidatorSet, InitialConsortiumSet {
+contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
     event Report(address indexed reporter, address indexed reported, bool indexed malicious);
     event Support(address indexed supporter, address indexed supported, bool indexed added);
     event ChangeFinalized(address[] current_set);
@@ -57,12 +57,10 @@ contract ConsortiumSet is IValidatorSet, InitialConsortiumSet {
 
     // STATE
     // Support can not be added once this number of validators is reached.
-    uint internal constant MAX_VALIDATORS = 30;
+    uint internal constant MAX_VALIDATORS = 1000;
 
     // Current list of addresses entitled to participate in the consensus.
     address[] private validatorsList;
-    // Was the last validator change finalized.
-    bool private finalized;
     // Tracker of status for each address.
     mapping(address => ValidatorStatus) private validatorsStatus;
 
@@ -303,20 +301,5 @@ contract ConsortiumSet is IValidatorSet, InitialConsortiumSet {
 
     modifier hasNoVotes(address validator) {
         if (AddressVotes.count(validatorsStatus[validator].support) == 0) { _; }
-    }
-
-    modifier isRecent(uint blockNumber) {
-        require(block.number <= blockNumber + RECENT_BLOCKS);
-        _;
-    }
-
-    modifier onlySystemAndNotFinalized() {
-        require(msg.sender == SYSTEM_ADDRESS && !finalized);
-        _;
-    }
-
-    modifier whenFinalized() {
-        require(finalized);
-        _;
     }
 }

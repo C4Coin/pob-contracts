@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.24;
 
 
-import './interfaces/IValidatorSet.sol';
+import './interfaces/SystemValidatorSet.sol';
 import './interfaces/LockableSeed.sol';
 import './ConsortiumSet.sol';
 import './ConsortiumSetSingleton.sol';
@@ -28,11 +28,16 @@ import './PublicSetSingleton.sol';
 
 // @title Contract to create committee from consortium and public validators
 // @notice Committees change every dynasty
-contract CommitteeSet is IValidatorSet, LockableSeed {
+contract CommitteeSet is SystemValidatorSet, LockableSeed {
     ConsortiumSet private consortiumSet = ConsortiumSetSingleton.instance();
     PublicSet private publicSet = PublicSetSingleton.instance();
 
     address[] private validatorsList;
+
+    // STATE
+    // Support can not be added once this number of validators is reached.
+    uint internal constant MAX_VALIDATORS = 50;
+    uint consortiumToPublicRatio = 3;
 
     constructor() public {
         validatorsList.push(address(0));

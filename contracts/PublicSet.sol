@@ -18,16 +18,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.24;
 
 
-import './interfaces/IValidatorSet.sol';
+import './interfaces/SystemValidatorSet.sol';
 import './interfaces/IBalanceStakeBank.sol';
 import './PublicStakeBankSingleton.sol';
 
 
 // @title Contract for public validators that wraps the stake bank used by public stakers
-contract PublicSet is IValidatorSet {
+contract PublicSet is SystemValidatorSet {
     IBalanceStakeBank private publicStakeBank = PublicStakeBankSingleton.instance();
 
-    uint internal constant MAX_VALIDATORS = 10;
+    // STATE
+    // Support can not be added once this number of validators is reached.
+    uint internal constant MAX_VALIDATORS = 20000;
 
     address[] private validatorsList;
 
