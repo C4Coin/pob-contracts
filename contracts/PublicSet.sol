@@ -19,13 +19,13 @@ pragma solidity ^0.4.24;
 
 
 import './interfaces/IValidatorSet.sol';
-import './PublicStakeBank.sol';
+import './interfaces/IBalanceStakeBank.sol';
 import './PublicStakeBankSingleton.sol';
 
 
 // @title Contract for public validators that wraps the stake bank used by public stakers
 contract PublicSet is IValidatorSet {
-    PublicStakeBank private publicStakeBank = PublicStakeBankSingleton.instance();
+    IBalanceStakeBank private publicStakeBank = PublicStakeBankSingleton.instance();
 
     uint internal constant MAX_VALIDATORS = 10;
 

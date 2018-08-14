@@ -18,13 +18,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.24;
 
 
-import './OrderedStakeBank.sol';
+import './BalanceStakeBank.sol';
 import './TokenRegistry.sol';
 
 /**
  * @title Contract for a stake bank implementing a stake and unstake delay
  */
-contract DelayedStakeBank is OrderedStakeBank {
+contract DelayedStakeBank is BalanceStakeBank {
     uint256 private unstakeDelay;
 
     // Balance of last amount staked for a staker
@@ -35,7 +35,7 @@ contract DelayedStakeBank is OrderedStakeBank {
      * @param _minimumStake Min threshold of amount that can be staked.
      * @param _unstakeDelay Earliest time (s) after last stake that stake can be withdrawn
      */
-    constructor(TokenRegistry _tokenRegistry, uint256 _minimumStake, uint256 _unstakeDelay) public OrderedStakeBank(_tokenRegistry, _minimumStake) {
+    constructor(TokenRegistry _tokenRegistry, uint256 _minimumStake, uint256 _unstakeDelay) public BalanceStakeBank(_tokenRegistry, _minimumStake) {
         unstakeDelay = _unstakeDelay;
     }
 
@@ -57,7 +57,7 @@ contract DelayedStakeBank is OrderedStakeBank {
     function stakeFor(address user, uint256 amount, bytes data) public {
         require(user == msg.sender);
         lastStaked[msg.sender] = block.number;
-        OrderedStakeBank.stakeFor(user, amount, data);
+        BalanceStakeBank.stakeFor(user, amount, data);
     }
 
     /**
@@ -68,6 +68,6 @@ contract DelayedStakeBank is OrderedStakeBank {
      */
     function unstake(uint256 amount, bytes data) public {
         require(block.number >= lastStaked[msg.sender].add(unstakeDelay));
-        OrderedStakeBank.unstake(amount, data);
+        BalanceStakeBank.unstake(amount, data);
     }
 }

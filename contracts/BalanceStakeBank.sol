@@ -18,13 +18,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.24;
 
 
+import './interfaces/IBalanceStakeBank.sol';
 import './BurnableStakeBank.sol';
 import './TokenRegistry.sol';
 
 /**
- * @title Contract for a stake bank that keeps stakes ordered ascending by staker address
+ * @title Contract for a stake bank that can compute total balances
+ * @notice Contract keeps stakers sorted by address to easily select a staker fairly
  */
-contract OrderedStakeBank is BurnableStakeBank {
+contract BalanceStakeBank is IBalanceStakeBank, BurnableStakeBank {
     // Staker and staker balance
     struct StakeData {
         uint amount;
@@ -43,7 +45,7 @@ contract OrderedStakeBank is BurnableStakeBank {
 
     uint public numStakers;
 
-    // Keep track of whether an address taht is staking is sorted
+    // Keep track of whether an address that is staking is sorted
     mapping (address => bool) public isSorted;
 
     /**
