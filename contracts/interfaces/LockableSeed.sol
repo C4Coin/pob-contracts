@@ -25,9 +25,9 @@ import './Lockable.sol';
  * @title A seed used for RNG which is only updatable by owner when locked
  */
 contract LockableSeed is Lockable {
-    uint public seed;
+    bytes32 public seed;
 
-    function setSeed(uint _seed) public onlyOwner onlyWhenUnlocked {
+    function setSeed(bytes32 _seed) public onlyOwner onlyWhenUnlocked {
         seed = _seed;
     }
 }

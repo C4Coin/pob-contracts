@@ -25,10 +25,10 @@ import './InitialConsortiumSet.sol';
 
 /**
  * @title Contract for consortium validators to add and remove support to addresses
- * @notice Support can not be added once MAX_VALIDATORS are present.
+ * @notice Support can not be added once maxValidators are present.
  * @notice Addresses supported by more than half of the existing validators are the validators.
  * @notice Malicious behaviour causes support removal.
- * @notice Benign misbehaviour causes supprt removal if its called again after MAX_INACTIVITY.
+ * @notice Benign misbehaviour causes supprt removal if its called again after maxInactivity.
  * @notice Benign misbehaviour can be absolved before being called the second time.
  */
 contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
@@ -55,14 +55,9 @@ contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
         AddressVotes.Data benignMisbehaviour;
     }
 
-    // STATE
-    // Support can not be added once this number of validators is reached.
-    uint internal constant MAX_VALIDATORS = 1000;
-
-    // Current list of addresses entitled to participate in the consensus.
+    uint internal constant maxValidators = 60;
     address[] private validatorsList;
-    // Tracker of status for each address.
-    mapping(address => ValidatorStatus) private validatorsStatus;
+    mapping(address => ValidatorStatus) public validatorsStatus;
 
     // Used to lower the constructor cost.
     AddressVotes.Data private initialSupport;
@@ -96,9 +91,14 @@ contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
         return validatorsList;
     }
 
+    // @notice Called to lookup if address belongs to a validator
+    function isValidator(address validator) public returns (bool) {
+        return validatorsStatus[validator].isValidator;
+    }
+
     // @notice called when a round is finalized by engine
     function finalizeChange() public onlySystemAndNotFinalized {
-        validatorsList = pendingList;
+        validatorList = pendingList;
         finalized = true;
         emit ChangeFinalized(validatorsList);
     }
@@ -269,7 +269,7 @@ contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
     }
 
     modifier hasRepeatedlyBenignMisbehaved(address validator) {
-        if (firstBenignReported(msg.sender, validator) - now > MAX_INACTIVITY) { _; }
+        if (firstBenignReported(msg.sender, validator) - now > maxInactivity) { _; }
     }
 
     modifier agreedOnRepeatedBenign(address validator) {
@@ -277,7 +277,7 @@ contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
     }
 
     modifier freeValidatorSlots() {
-        require(pendingList.length < MAX_VALIDATORS);
+        require(pendingList.length < maxValidators);
         _;
     }
 

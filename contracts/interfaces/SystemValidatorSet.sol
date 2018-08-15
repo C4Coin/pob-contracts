@@ -23,23 +23,36 @@ import './IValidatorSet.sol';
  * @title Contract for a validator set that has params system params and modifiers
  */
 contract SystemValidatorSet is IValidatorSet {
-    /// Constants used by all validator sets
+    event SystemValidatorError(string message);
+
     // System address, used by the block sealer.
-    address internal constant SYSTEM_ADDRESS = 0x00fffffffffffffffffffffffffffffffffffffffe;
+    address internal constant systemAddress = 0x00fffffffffffffffffffffffffffffffffffffffe;
+
     // Time after which the validators will report a validator as malicious.
-    uint internal constant MAX_INACTIVITY = 6 hours;
+    uint internal constant maxInactivity = 6 hours;
+
     // Ignore misbehaviour older than this number of blocks.
-    uint internal constant RECENT_BLOCKS = 20;
+    uint internal constant recentBlocks = 20;
+
+    // Number of blocks/epochs before a dynasty change occurs
+    uint256 dynastyInterval = 1000;
+
     // Was the last validator change finalized.
     bool internal finalized;
 
+    function isValidator(address validator) public returns (bool);
+
+    function isChangingDynasty() public returns (bool) {
+        return (block.number % dynastyInterval) == 0
+    }
+
     modifier isRecent(uint blockNumber) {
-        require(block.number <= blockNumber + RECENT_BLOCKS);
+        require(block.number <= blockNumber + recentBlocks);
         _;
     }
 
     modifier onlySystemAndNotFinalized() {
-        require(msg.sender == SYSTEM_ADDRESS && !finalized);
+        require(msg.sender == systemAddress && !finalized);
         _;
     }
 

@@ -20,28 +20,20 @@ pragma solidity ^0.4.24;
 
 import './interfaces/SystemValidatorSet.sol';
 import './interfaces/LockableSeed.sol';
-import './ConsortiumSet.sol';
 import './ConsortiumSetSingleton.sol';
-import './PublicSet.sol';
 import './PublicSetSingleton.sol';
 
 
 // @title Contract to create committee from consortium and public validators
 // @notice Committees change every dynasty
 contract CommitteeSet is SystemValidatorSet, LockableSeed {
-    ConsortiumSet private consortiumSet = ConsortiumSetSingleton.instance();
-    PublicSet private publicSet = PublicSetSingleton.instance();
+    SystemValidatorSet private consortiumSet = ConsortiumSetSingleton.instance();
+    SystemValidatorSet private publicSet = PublicSetSingleton.instance();
 
     address[] private validatorsList;
 
-    // STATE
-    // Support can not be added once this number of validators is reached.
-    uint internal constant MAX_VALIDATORS = 50;
-    uint consortiumToPublicRatio = 3;
-
-    constructor() public {
-        validatorsList.push(address(0));
-    }
+    uint256 internal constant maxValidators = 80;
+    uint256 consortiumToPublicRatio = 3;
 
     /// Get current validator set (last enacted or initial if no changes ever made)
     function getValidators() public constant returns (address[]) {
@@ -53,18 +45,67 @@ contract CommitteeSet is SystemValidatorSet, LockableSeed {
     ///
     /// Also called when the contract is first enabled for consensus. In this case,
     /// the "change" finalized is the activation of the initial set.
-    function finalizeChange() public {
+    function finalizeChange() public onlySystemAndNotFinalized {
+        if (isChangingDynasty()) {
+            consortiumSet.finalizeChange();
+            publicSet.finalizeChange();
 
+            address[] memory consortiumValidators = consortiumSet.getValidators();
+            address[] memory publicValidators = publicSet.getValidators();
+
+            uint256 indexConsortium = 0;
+            uint256 indexPublic = 0;
+            // If public nodes > 25% then add more consortium validators
+            if ( publicValidators.length * consortiumToPublicRatio >= consortiumSet.length) {
+                // Calculate how many more consortium members we need
+                uint256 memory deltaConsortium = publicValidators.length * consortiumToPublicRatio - consortiumSet.length;
+                for( uint256 i=0; i < deltaConsortium; i++) {
+                    consortiumValidators.push(consortiumValidators[i]);
+                }
+            }
+
+            // Zip validators to form committee
+            address[] memory committeeValidators = new address[](maxValidators);
+            for (uint256 i = 0; i < maxValidators; i++) {
+                if (i % (consortiumToPublicRatio + 1) == 0) {
+                    // Move foreward in public val. if we can and update committee
+                    if (indexPublic < publicValidators.length) {
+                        committeeValidators[i] = publicValidators[indexPublic];
+                        indexPublic++;
+                    }
+                    continue;
+                } else {
+                    indexConsortium++;
+                }
+                committeeValidators[i] = consortiumValidators[indexConsortium];
+            }
+
+            validatorList = committeeValidators;
+        }
+
+        finalized = true;
+        emit ChangeFinalized(validatorsList);
     }
 
     // Reporting functions: operate on current validator set.
     // malicious behavior requires proof, which will vary by engine.
-
     function reportBenign(address validator, uint256 blockNumber) public {
-
+        if (consortiumSet.isValidator(validator)) {
+            consortiumSet.reportBenign(validator, blockNumber);
+        } else if (publicSet.isValidator(validator)) {
+            publicSet.reportBenign(validator, blockNumber);
+        } else {
+            emit SystemValidatorError("reportBenign given invalid address");
+        }
     }
 
     function reportMalicious(address validator, uint256 blockNumber, bytes proof) public {
-
+        if (consortiumSet.isValidator(validator)) {
+            consortiumSet.reportMalicious(validator, blockNumber);
+        } else if (publicSet.isValidator(validator)) {
+            publicSet.reportMalicious(validator, blockNumber);
+        } else {
+            emit SystemValidatorError("reportMalicious given invalid address");
+        }
     }
 }
