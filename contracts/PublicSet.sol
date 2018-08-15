@@ -19,15 +19,14 @@ pragma solidity ^0.4.24;
 
 
 import './interfaces/SystemValidatorSet.sol';
-import './interfaces/IBalanceStakeBank.sol';
+import './interfaces/IStakeBank.sol';
 import './PublicStakeBankSingleton.sol';
-import './interfaces/LockableSeed.sol';
 import './libraries/FtsLib.sol';
 
 
 // @title Contract for public validators that wraps the stake bank used by public stakers
-contract PublicSet is SystemValidatorSet, LockableSeed {
-    IBalanceStakeBank private publicStakeBank = PublicStakeBankSingleton.instance();
+contract PublicSet is SystemValidatorSet {
+    IStakeBank private publicStakeBank = PublicStakeBankSingleton.instance();
 
     uint internal constant maxValidators = 20;
 
@@ -35,7 +34,7 @@ contract PublicSet is SystemValidatorSet, LockableSeed {
 
     /// Get current validator set (last enacted or initial if no changes ever made)
     function getValidators() public constant returns (address[]) {
-        return validatorList;
+        return validatorsList;
     }
 
     /// Called when an initiated change reaches finality and is activated.
@@ -44,20 +43,27 @@ contract PublicSet is SystemValidatorSet, LockableSeed {
     /// Also called when the contract is first enabled for consensus. In this case,
     /// the "change" finalized is the activation of the initial set.
     function finalizeChange() public onlySystemAndNotFinalized {
-        publicStakeBank.lock();
+        /* publicStakeBank.lock(); */
 
-        var memory (stakerIds, balances) = publicStakeBank.totalBalances();
+        var (stakerIds, balances) = publicStakeBank.totalBalances(); // can we do memory here?
         uint256[] memory stakerIndices = new uint256[](balances.length);
         for ( uint256 i = 1; i < stakerIndices.length; i++) {
             stakerIndices[i] = stakerIndices[i] + stakerIndices[i-1];
         }
-        uint256 memory totalCoins = publicStakeBank.totalStake();
+        uint256 totalCoins = publicStakeBank.totalStaked(); // TODO: maybe use totalStakedAt(block.number)?
         validatorsList = FtsLib.fts(seed, stakerIds, stakerIndices, totalCoins, maxValidators);
 
-        publicStakeBank.unlock();
+        // TODO: Is this where we burn?
+
+        /* publicStakeBank.unlock(); */
 
         finalized=true;
         emit ChangeFinalized(validatorsList);
+    }
+
+    function isInValidatorSet(address validator) public returns (bool) {
+        // TODO
+        return false;
     }
 
     // Reporting functions: operate on current validator set.

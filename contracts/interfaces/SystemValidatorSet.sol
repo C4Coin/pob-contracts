@@ -18,12 +18,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.24;
 
 import './IValidatorSet.sol';
+import './Lockable.sol';
 
 /**
- * @title Contract for a validator set that has params system params and modifiers
+ * @title Contract for a validator set that has system params and modifiers and is seedable for RNG
  */
-contract SystemValidatorSet is IValidatorSet {
+contract SystemValidatorSet is IValidatorSet, Lockable {
     event SystemValidatorError(string message);
+    event Report(address indexed reporter, address indexed reported, bool indexed malicious);
+    event Support(address indexed supporter, address indexed supported, bool indexed added);
+    event ChangeFinalized(address[] current_set);
 
     // System address, used by the block sealer.
     address internal constant systemAddress = 0x00fffffffffffffffffffffffffffffffffffffffe;
@@ -40,10 +44,16 @@ contract SystemValidatorSet is IValidatorSet {
     // Was the last validator change finalized.
     bool internal finalized;
 
-    function isValidator(address validator) public returns (bool);
+    bytes32 public seed;
+
+    function setSeed(bytes32 _seed) public onlyOwner onlyWhenUnlocked {
+        seed = _seed;
+    }
+
+    function isInValidatorSet(address validator) public returns (bool);
 
     function isChangingDynasty() public returns (bool) {
-        return (block.number % dynastyInterval) == 0
+        return (block.number % dynastyInterval) == 0;
     }
 
     modifier isRecent(uint blockNumber) {

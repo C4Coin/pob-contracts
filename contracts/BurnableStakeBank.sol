@@ -40,6 +40,8 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
     Checkpoint[] public burnHistory;
     uint256 public stakeLockBlockInterval = 1000;
     uint256 minimumStake;
+    address internal constant systemAddress = 0x00fffffffffffffffffffffffffffffffffffffffe;
+
 
     mapping (address => Checkpoint[]) public stakesFor;
     mapping (address => Checkpoint[]) public burnsFor;
@@ -88,7 +90,6 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
      * @param user Address of the user to burn for.
      * @param burnAmount Amount of tokens to burn.
      * @param __data Data field used for signalling in more complex staking applications.
-     * Likely use onlySystemAndNotFinalized at a higher-level not here.
      */
     function burnFor(address user, uint256 burnAmount, bytes __data) public onlyWhenUnlocked onlySystem {
         require(totalStakedFor(msg.sender) >= burnAmount);
@@ -296,5 +297,10 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
             out |= bytes32(b[offset + i] & 0xFF) >> (i * 8);
         }
         return out;
+   }
+
+   modifier onlySystem() {
+       require(msg.sender == systemAddress);
+       _;
    }
 }

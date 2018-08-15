@@ -1,6 +1,6 @@
 pragma solidity ^0.4.24;
 
-contract Fts {
+library FtsLib {
    event Debug(uint256 x);
 
    function _newRandomNumber(bytes32 seed) internal returns (uint256) {

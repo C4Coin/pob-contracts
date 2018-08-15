@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.24;
 
 
-import './interfaces/IBalanceStakeBank.sol';
+import './interfaces/IStakeBank.sol';
 import './BurnableStakeBank.sol';
 import './TokenRegistry.sol';
 
@@ -26,7 +26,7 @@ import './TokenRegistry.sol';
  * @title Contract for a stake bank that can compute total balances
  * @notice Contract keeps stakers sorted by address to easily select a staker fairly
  */
-contract BalanceStakeBank is IBalanceStakeBank, BurnableStakeBank {
+contract BalanceStakeBank is BurnableStakeBank {
     // Staker and staker balance
     struct StakeData {
         uint amount;

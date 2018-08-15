@@ -32,9 +32,6 @@ import './InitialConsortiumSet.sol';
  * @notice Benign misbehaviour can be absolved before being called the second time.
  */
 contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
-    event Report(address indexed reporter, address indexed reported, bool indexed malicious);
-    event Support(address indexed supporter, address indexed supported, bool indexed added);
-    event ChangeFinalized(address[] current_set);
 
     struct ValidatorStatus {
         bool isValidator;
@@ -57,7 +54,7 @@ contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
 
     uint internal constant maxValidators = 60;
     address[] private validatorsList;
-    mapping(address => ValidatorStatus) public validatorsStatus;
+    mapping(address => ValidatorStatus) private validatorsStatus;
 
     // Used to lower the constructor cost.
     AddressVotes.Data private initialSupport;
@@ -92,13 +89,13 @@ contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
     }
 
     // @notice Called to lookup if address belongs to a validator
-    function isValidator(address validator) public returns (bool) {
+    function isInValidatorSet(address validator) public returns (bool) {
         return validatorsStatus[validator].isValidator;
     }
 
     // @notice called when a round is finalized by engine
     function finalizeChange() public onlySystemAndNotFinalized {
-        validatorList = pendingList;
+        validatorsList = pendingList;
         finalized = true;
         emit ChangeFinalized(validatorsList);
     }
