@@ -18,11 +18,25 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.24;
 
 
-import './interfaces/IValidatorSet.sol';
-import './DelayedStakeBank.sol';
+library ChainSpecRegistry {
+    function indexOf(bytes32 contractHash) pure returns (address) {
+        // Built-in chainspec contracts start at offset
+        uint256 offset = 0x100;
 
+        // TODO: Add block reward and secret sharing contracts
+        bytes32[5] memory _contractHashes = [
+            keccak256("CommitteeSet"),
+            keccak256("ConsortiumSet"),
+            keccak256("PublicSet"),
+            keccak256("PublicStakeBank"),
+            keccak256("TokenRegistry")
+        ];
 
-// @title Contract for public validators that wraps the stake bank used by public stakers
-contract PublicStakingSet is IValidatorSet {
-    DelayedStakeBank private delayedStakeBank; // TODO: determine highest-level stake bank impl.
+        for (uint256 i=0; i < _contractHashes.length; i++) {
+            if (contractHash == _contractHashes[i]) {
+                return address((i + offset));
+            }
+        }
+        throw;
+    }
 }

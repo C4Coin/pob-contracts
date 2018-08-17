@@ -17,17 +17,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 pragma solidity ^0.4.24;
 
+import './ChainSpecRegistry.sol';
 
-import './Lockable.sol';
+// @title Library which returns address of built in chainspec contracts if enabled
+library ChainSpec {
+    // @notice: CLI build automation should replace false with true during pre-compile
+    bool public constant _enabledFlag = false;
 
+    function isEnabled() constant returns (bool) {
+        return _enabledFlag;
+    }
 
-/**
- * @title A seed used for RNG which is only updatable by owner when locked
- */
-contract LockableSeed is Lockable {
-    uint public seed;
-
-    function setSeed(uint _seed) public onlyOwner onlyWhenUnlocked {
-        seed = _seed;
+    function addrOf(bytes32 contractHash) constant returns (address) {
+        return ChainSpecRegistry.indexOf(contractHash);
     }
 }

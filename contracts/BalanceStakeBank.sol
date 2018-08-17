@@ -18,14 +18,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.24;
 
 
-import './interfaces/IBalanceStakeBank.sol';
+import './interfaces/IStakeBank.sol';
 import './BurnableStakeBank.sol';
-
+import './TokenRegistry.sol';
 
 /**
- * @title Contract for a stake bank that allows access to staker account balances
+ * @title Contract for a stake bank that can compute total balances
+ * @notice Contract keeps stakers sorted by address to easily select a staker fairly
  */
-contract BalanceStakeBank is BurnableStakeBank, IBalanceStakeBank {
+contract BalanceStakeBank is BurnableStakeBank {
     // Staker and staker balance
     struct StakeData {
         uint amount;
@@ -44,11 +45,14 @@ contract BalanceStakeBank is BurnableStakeBank, IBalanceStakeBank {
 
     uint public numStakers;
 
-    // Keep track of whether an address taht is staking is sorted
+    // Keep track of whether an address that is staking is sorted
     mapping (address => bool) public isSorted;
 
-    // @param _token Token that can be staked.
-    constructor(IBurnableERC20 _token) public BurnableStakeBank(_token) {
+    /**
+     * @param _tokenRegistry Token registry that contains white listed tokens.
+     * @param _minimumStake Min threshold of amount that can be staked.
+     */
+    constructor(TokenRegistry _tokenRegistry, uint256 _minimumStake) public BurnableStakeBank(_tokenRegistry, _minimumStake) {
         StakeData memory temp = StakeData({ amount: 0, staker: address(0) });
         stakeNodes.push(Node(temp, 0, 0));
     }

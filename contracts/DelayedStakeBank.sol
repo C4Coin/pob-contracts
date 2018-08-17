@@ -19,7 +19,7 @@ pragma solidity ^0.4.24;
 
 
 import './BalanceStakeBank.sol';
-
+import './TokenRegistry.sol';
 
 /**
  * @title Contract for a stake bank implementing a stake and unstake delay
@@ -31,10 +31,11 @@ contract DelayedStakeBank is BalanceStakeBank {
     mapping (address => uint256) private lastStaked;
 
     /**
-     * @param _token Token that can be staked.
+     * @param _tokenRegistry Token registry that contains white listed tokens.
+     * @param _minimumStake Min threshold of amount that can be staked.
      * @param _unstakeDelay Earliest time (s) after last stake that stake can be withdrawn
      */
-    constructor(IBurnableERC20 _token, uint256 _unstakeDelay) public BalanceStakeBank(_token) {
+    constructor(TokenRegistry _tokenRegistry, uint256 _minimumStake, uint256 _unstakeDelay) public BalanceStakeBank(_tokenRegistry, _minimumStake) {
         unstakeDelay = _unstakeDelay;
     }
 

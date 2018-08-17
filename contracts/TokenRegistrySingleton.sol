@@ -17,15 +17,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 pragma solidity ^0.4.24;
 
+import './TokenRegistry.sol';
 
-import './interfaces/IValidatorSet.sol';
-import './interfaces/LockableSeed.sol';
-import './ConsortiumSet.sol';
-import './PublicStakingSet.sol';
-
-
-// @title Contract to create epoch committee from consortium and public validators
-contract EpochCommitteeSet is IValidatorSet, LockableSeed {
-    ConsortiumSet private consortiumSet;
-    PublicStakingSet private publicSet;
+library TokenRegistrySingleton {
+    function instance() public returns (TokenRegistry) {
+        return new TokenRegistry();
+    }
 }

@@ -18,23 +18,20 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.24;
 
 
-import './interfaces/IValidatorSet.sol';
+import './interfaces/SystemValidatorSet.sol';
 import './libraries/AddressVotes.sol';
 import './InitialConsortiumSet.sol';
 
 
 /**
  * @title Contract for consortium validators to add and remove support to addresses
- * @notice Support can not be added once MAX_VALIDATORS are present.
+ * @notice Support can not be added once maxValidators are present.
  * @notice Addresses supported by more than half of the existing validators are the validators.
  * @notice Malicious behaviour causes support removal.
- * @notice Benign misbehaviour causes supprt removal if its called again after MAX_INACTIVITY.
+ * @notice Benign misbehaviour causes supprt removal if its called again after maxInactivity.
  * @notice Benign misbehaviour can be absolved before being called the second time.
  */
-contract ConsortiumSet is IValidatorSet, InitialConsortiumSet {
-    event Report(address indexed reporter, address indexed reported, bool indexed malicious);
-    event Support(address indexed supporter, address indexed supported, bool indexed added);
-    event ChangeFinalized(address[] current_set);
+contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
 
     struct ValidatorStatus {
         bool isValidator;
@@ -55,22 +52,8 @@ contract ConsortiumSet is IValidatorSet, InitialConsortiumSet {
         AddressVotes.Data benignMisbehaviour;
     }
 
-    // System address, used by the block sealer.
-    address private constant SYSTEM_ADDRESS = 0x00fffffffffffffffffffffffffffffffffffffffe;
-    // Support can not be added once this number of validators is reached.
-    uint private constant MAX_VALIDATORS = 30;
-    // Time after which the validators will report a validator as malicious.
-    uint private constant MAX_INACTIVITY = 6 hours;
-    // Ignore misbehaviour older than this number of blocks.
-    uint private constant RECENT_BLOCKS = 20;
-
-    // STATE
-
-    // Current list of addresses entitled to participate in the consensus.
+    uint internal constant maxValidators = 60;
     address[] private validatorsList;
-    // Was the last validator change finalized.
-    bool private finalized;
-    // Tracker of status for each address.
     mapping(address => ValidatorStatus) private validatorsStatus;
 
     // Used to lower the constructor cost.
@@ -103,6 +86,11 @@ contract ConsortiumSet is IValidatorSet, InitialConsortiumSet {
     // @notice Called on every block to update node validator list.
     function getValidators() public constant returns (address[]) {
         return validatorsList;
+    }
+
+    // @notice Called to lookup if address belongs to a validator
+    function isInValidatorSet(address validator) public returns (bool) {
+        return validatorsStatus[validator].isValidator;
     }
 
     // @notice called when a round is finalized by engine
@@ -278,7 +266,7 @@ contract ConsortiumSet is IValidatorSet, InitialConsortiumSet {
     }
 
     modifier hasRepeatedlyBenignMisbehaved(address validator) {
-        if (firstBenignReported(msg.sender, validator) - now > MAX_INACTIVITY) { _; }
+        if (firstBenignReported(msg.sender, validator) - now > maxInactivity) { _; }
     }
 
     modifier agreedOnRepeatedBenign(address validator) {
@@ -286,7 +274,7 @@ contract ConsortiumSet is IValidatorSet, InitialConsortiumSet {
     }
 
     modifier freeValidatorSlots() {
-        require(pendingList.length < MAX_VALIDATORS);
+        require(pendingList.length < maxValidators);
         _;
     }
 
@@ -310,20 +298,5 @@ contract ConsortiumSet is IValidatorSet, InitialConsortiumSet {
 
     modifier hasNoVotes(address validator) {
         if (AddressVotes.count(validatorsStatus[validator].support) == 0) { _; }
-    }
-
-    modifier isRecent(uint blockNumber) {
-        require(block.number <= blockNumber + RECENT_BLOCKS);
-        _;
-    }
-
-    modifier onlySystemAndNotFinalized() {
-        require(msg.sender == SYSTEM_ADDRESS && !finalized);
-        _;
-    }
-
-    modifier whenFinalized() {
-        require(finalized);
-        _;
     }
 }

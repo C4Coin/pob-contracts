@@ -19,7 +19,7 @@ pragma solidity ^0.4.24;
 
 
 /**
- * @title Interface for a stake bank based on EIP900 standard
+ * @title Interface for a stake bank based on EIP900 standard with extra method for getting balances
  */
 contract IStakeBank {
     event Staked(address indexed user, uint256 amount, uint256 total, bytes data);
@@ -35,4 +35,6 @@ contract IStakeBank {
     function lastStakedFor(address addr) public view returns (uint256);
     function totalStakedForAt(address addr, uint256 blockNumber) public view returns (uint256);
     function totalStakedAt(uint256 blockNumber) public view returns (uint256);
+
+    function totalBalances() public view returns (address[], uint[]);
 }

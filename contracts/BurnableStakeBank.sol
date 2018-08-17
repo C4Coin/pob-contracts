@@ -35,19 +35,24 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
         uint256 amount;
     }
 
-    TokenRegistry whitelist;
+    TokenRegistry tokenRegistry;
     Checkpoint[] public stakeHistory;
     Checkpoint[] public burnHistory;
     uint256 public stakeLockBlockInterval = 1000;
     uint256 minimumStake;
+    address internal constant systemAddress = 0x00fffffffffffffffffffffffffffffffffffffffe;
+
 
     mapping (address => Checkpoint[]) public stakesFor;
     mapping (address => Checkpoint[]) public burnsFor;
 
-    // @param _token Token that can be staked.
-    constructor(TokenRegistry _list, uint256 _minimumStake) public {
-        require(address(_list) != 0x0);
-        whitelist = _list;
+    /**
+     * @param _tokenRegistry Token registry that contains white listed tokens.
+     * @param _minimumStake Min threshold of amount that can be staked.
+     */
+    constructor(TokenRegistry _tokenRegistry, uint256 _minimumStake) public {
+        require(address(_tokenRegistry) != 0x0);
+        tokenRegistry = _tokenRegistry;
         minimumStake = _minimumStake;
     }
 
@@ -66,7 +71,7 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
      * @param amount Amount of tokens to stake.
      * @param __data Data field used for signalling in more complex staking applications. //stakeLockBlockInterval
      */
-    function stakeFor(address user, uint256 amount, bytes __data) public onlyWhenUnlocked onlyWhenStakeInterval {
+    function stakeFor(address user, uint256 amount, bytes __data) public onlyWhenUnlocked {
         require( amount >= minimumStake );
 
         updateCheckpointAtNow(stakesFor[user], amount, false);
@@ -75,7 +80,7 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
         // Convert bytes to bytes32
         bytes32 tokenId = _bytesToBytes32(__data, 0);
 
-        IBurnableERC20 token = BurnableERC20( whitelist.getAddress(tokenId) );
+        IBurnableERC20 token = BurnableERC20( tokenRegistry.getAddress(tokenId) );
 
         require(token.transferFrom(msg.sender, address(this), amount));
     }
@@ -85,10 +90,8 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
      * @param user Address of the user to burn for.
      * @param burnAmount Amount of tokens to burn.
      * @param __data Data field used for signalling in more complex staking applications.
-     * TODO: should we use onlyWhenUnlocked or onlySystemAndNotFinalized?
-     * Likely use onlySystemAndNotFinalized at a higher-level not here.
      */
-    function burnFor(address user, uint256 burnAmount, bytes __data) public onlyWhenUnlocked {
+    function burnFor(address user, uint256 burnAmount, bytes __data) public onlyWhenUnlocked onlySystem {
         require(totalStakedFor(msg.sender) >= burnAmount);
 
         // Convert bytes to bytes32
@@ -97,7 +100,7 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
         // Burn tokens
         updateCheckpointAtNow(burnsFor[user], burnAmount, false);
         updateCheckpointAtNow(burnHistory, burnAmount, false);
-        IBurnableERC20 token = BurnableERC20( whitelist.getAddress(tokenId) );
+        IBurnableERC20 token = BurnableERC20( tokenRegistry.getAddress(tokenId) );
         token.burn(burnAmount);
 
         // Remove stake
@@ -110,7 +113,7 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
      * @param amount Amount of tokens to unstake.
      * @param __data Data field used for signalling in more complex staking applications.
      */
-    function unstake(uint256 amount, bytes __data) public onlyWhenStakeInterval {
+    function unstake(uint256 amount, bytes __data) public {
         require(totalStakedFor(msg.sender) >= amount);
 
         uint256 preStake   = totalStakedFor(msg.sender);
@@ -124,7 +127,7 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
         // Convert bytes to bytes32
         bytes32 tokenId = _bytesToBytes32(__data, 0);
 
-        IBurnableERC20 token = BurnableERC20( whitelist.getAddress(tokenId) );
+        IBurnableERC20 token = BurnableERC20( tokenRegistry.getAddress(tokenId) );
         require(token.transfer(msg.sender, amount));
     }
 
@@ -286,14 +289,6 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
         return history[min].amount;
     }
 
-    /**
-     * @notice Allow only when block is not a "stakeLockBlockInterval" number of blocks
-     */
-    modifier onlyWhenStakeInterval() {
-        require(block.number % stakeLockBlockInterval != 0);
-        _;
-    }
-
     function _bytesToBytes32(bytes b, uint offset) private pure returns (bytes32) {
         require(b.length < 32);
         bytes32 out;
@@ -302,5 +297,10 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
             out |= bytes32(b[offset + i] & 0xFF) >> (i * 8);
         }
         return out;
+   }
+
+   modifier onlySystem() {
+       require(msg.sender == systemAddress);
+       _;
    }
 }
