@@ -10,9 +10,9 @@ const {
 
 const DEFAULT = {
   host: 'localhost',
-  port: 8545,
+  port: 7545,
   network_id: '*', // Match any network id
-  gas: 4600000
+  gasPrice: 20000000000 // Same value as `truffle develop`
 }
 
 module.exports = {
@@ -23,7 +23,7 @@ module.exports = {
   license,
   authors: [author, ...contributors],
   networks: {
-    geth: { ...DEFAULT, gas: 999999 }
+    development: { ...DEFAULT, gas: 999999 }
     // ropsten: {
     //   network_id: 3,
     //   provider: engineRopsten,
