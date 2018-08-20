@@ -89,7 +89,7 @@ contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
     }
 
     // @notice Called to lookup if address belongs to a validator
-    function isInValidatorSet(address validator) public returns (bool) {
+    function isInValidatorSet(address validator) public view returns (bool) {
         return validatorsStatus[validator].isValidator;
     }
 
