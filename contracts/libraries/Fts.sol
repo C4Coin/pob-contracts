@@ -21,8 +21,6 @@ pragma solidity ^0.4.24;
  * @title Follow-the-Satoshi library selects stakers with a random seed based on coin ownership
  */
 library Fts {
-   event Debug(uint256 x);
-
    function _newRandomNumber(bytes32 seed) internal returns (uint256) {
       return uint256( keccak256(seed) );
    }
@@ -61,7 +59,7 @@ library Fts {
           }
           selectedStakers[i] = stakerIds[min];
        }
-       
+
        return selectedStakers;
    }
 }

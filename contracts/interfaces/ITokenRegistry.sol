@@ -18,10 +18,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.24;
 
 
-import 'openzeppelin-solidity/contracts/token/ERC20/StandardBurnableToken.sol';
-import 'openzeppelin-solidity/contracts/token/ERC20/CappedToken.sol';
-import './IBurnableERC20.sol';
+contract ITokenRegistry {
+    mapping (bytes32 => address) public tokens;
 
-contract BurnableERC20 is IBurnableERC20, StandardBurnableToken, CappedToken {
-    constructor (uint256 _cap) CappedToken(_cap) public {}
+    function contains(bytes32 tokenId) view public returns (bool);
+    function getAddress(bytes32 tokenId) view public returns (address);
+    function setToken(bytes32 tokenId, address _addr) public;
 }

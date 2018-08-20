@@ -17,7 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 pragma solidity ^0.4.24;
 
-import './Fts.sol';
+import './libraries/Fts.sol';
 
 /**
  * @title Contract to wrap the Follow-the-Satoshi library

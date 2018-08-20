@@ -18,9 +18,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.24;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./interfaces/ITokenRegistry.sol";
 
-contract TokenRegistry is Ownable {
+
+contract TokenRegistry is ITokenRegistry, Ownable {
     mapping (bytes32 => address) public tokens;
+
+    constructor() public Ownable() {    
+    }
 
     function contains(bytes32 tokenId) view public returns (bool) {
         return tokens[tokenId] == address(0) ? false : true;

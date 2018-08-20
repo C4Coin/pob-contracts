@@ -22,8 +22,7 @@ import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
 import './interfaces/Lockable.sol';
 import './interfaces/IBurnableStakeBank.sol';
 import './interfaces/IBurnableERC20.sol';
-import './interfaces/BurnableERC20.sol';
-import './TokenRegistry.sol';
+import './interfaces/ITokenRegistry.sol';
 
 
 // @title Contract for to keep track of stake (checkpoint history total staked at block) and burn tokens
@@ -35,7 +34,7 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
         uint256 amount;
     }
 
-    TokenRegistry tokenRegistry;
+    ITokenRegistry tokenRegistry;
     Checkpoint[] public stakeHistory;
     Checkpoint[] public burnHistory;
     uint256 public stakeLockBlockInterval = 1000;
@@ -50,7 +49,7 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
      * @param _tokenRegistry Token registry that contains white listed tokens.
      * @param _minimumStake Min threshold of amount that can be staked.
      */
-    constructor(TokenRegistry _tokenRegistry, uint256 _minimumStake) public {
+    constructor(ITokenRegistry _tokenRegistry, uint256 _minimumStake) public {
         require(address(_tokenRegistry) != 0x0);
         tokenRegistry = _tokenRegistry;
         minimumStake = _minimumStake;
@@ -80,7 +79,7 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
         // Convert bytes to bytes32
         bytes32 tokenId = _bytesToBytes32(__data, 0);
 
-        IBurnableERC20 token = BurnableERC20( tokenRegistry.getAddress(tokenId) );
+        IBurnableERC20 token = IBurnableERC20( tokenRegistry.getAddress(tokenId) );
 
         require(token.transferFrom(msg.sender, address(this), amount));
     }
@@ -100,7 +99,7 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
         // Burn tokens
         updateCheckpointAtNow(burnsFor[user], burnAmount, false);
         updateCheckpointAtNow(burnHistory, burnAmount, false);
-        IBurnableERC20 token = BurnableERC20( tokenRegistry.getAddress(tokenId) );
+        IBurnableERC20 token = IBurnableERC20( tokenRegistry.getAddress(tokenId) );
         token.burn(burnAmount);
 
         // Remove stake
@@ -127,7 +126,7 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
         // Convert bytes to bytes32
         bytes32 tokenId = _bytesToBytes32(__data, 0);
 
-        IBurnableERC20 token = BurnableERC20( tokenRegistry.getAddress(tokenId) );
+        IBurnableERC20 token = IBurnableERC20( tokenRegistry.getAddress(tokenId) );
         require(token.transfer(msg.sender, amount));
     }
 

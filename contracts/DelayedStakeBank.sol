@@ -19,7 +19,7 @@ pragma solidity ^0.4.24;
 
 
 import './BalanceStakeBank.sol';
-import './TokenRegistry.sol';
+import './interfaces/ITokenRegistry.sol';
 
 /**
  * @title Contract for a stake bank implementing a stake and unstake delay
@@ -35,7 +35,7 @@ contract DelayedStakeBank is BalanceStakeBank {
      * @param _minimumStake Min threshold of amount that can be staked.
      * @param _unstakeDelay Earliest time (s) after last stake that stake can be withdrawn
      */
-    constructor(TokenRegistry _tokenRegistry, uint256 _minimumStake, uint256 _unstakeDelay) public BalanceStakeBank(_tokenRegistry, _minimumStake) {
+    constructor(ITokenRegistry _tokenRegistry, uint256 _minimumStake, uint256 _unstakeDelay) public BalanceStakeBank(_tokenRegistry, _minimumStake) {
         unstakeDelay = _unstakeDelay;
     }
 
