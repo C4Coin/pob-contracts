@@ -22,7 +22,7 @@ import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
 import './interfaces/Lockable.sol';
 import './interfaces/IBurnableStakeBank.sol';
 import './interfaces/IBurnableERC20.sol';
-import './interfaces/ITokenRegistry.sol';
+import './TokenRegistry.sol';
 
 
 // @title Contract for to keep track of stake (checkpoint history total staked at block) and burn tokens
@@ -34,7 +34,7 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
         uint256 amount;
     }
 
-    ITokenRegistry tokenRegistry;
+    TokenRegistry tokenRegistry;
     Checkpoint[] public stakeHistory;
     Checkpoint[] public burnHistory;
     uint256 public stakeLockBlockInterval = 1000;
@@ -49,7 +49,7 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
      * @param _tokenRegistry Token registry that contains white listed tokens.
      * @param _minimumStake Min threshold of amount that can be staked.
      */
-    constructor(ITokenRegistry _tokenRegistry, uint256 _minimumStake) public {
+    constructor(TokenRegistry _tokenRegistry, uint256 _minimumStake) public {
         require(address(_tokenRegistry) != 0x0);
         tokenRegistry = _tokenRegistry;
         minimumStake = _minimumStake;

@@ -18,14 +18,26 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.24;
 
 
-import './IStakeBank.sol';
-
-
 /**
- * @title Contract for a stake bank which burns tokens
+ * @title Interface for a stake bank which can burn staked tokens
+ * @notice EIP900 + additional methods & events for getting total balances and burning
  */
-contract IBurnableStakeBank is IStakeBank {
+interface IBurnableStakeBank {
+    event Staked(address indexed user, uint256 amount, uint256 total, bytes data);
+    event Unstaked(address indexed user, uint256 amount, uint256 total, bytes data);
     event StakeBurned(address indexed user, uint256 burnAmount, bytes data);
 
+    function stake(uint256 amount, bytes data) public;
+    function stakeFor(address user, uint256 amount, bytes data) public;
+    function unstake(uint256 amount, bytes data) public;
+    function totalStakedFor(address addr) public view returns (uint256);
+    function totalStaked() public view returns (uint256);
+    function token() public view returns (address);
+    function supportsHistory() public pure returns (bool);
+    function lastStakedFor(address addr) public view returns (uint256);
+    function totalStakedForAt(address addr, uint256 blockNumber) public view returns (uint256);
+    function totalStakedAt(uint256 blockNumber) public view returns (uint256);
+
+    function totalBalances() public view returns (address[], uint[]);
     function burnFor(address user, uint256 burnAmount, bytes data) public;
 }

@@ -18,9 +18,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.24;
 
 
-import './interfaces/IStakeBank.sol';
 import './BurnableStakeBank.sol';
-import './interfaces/ITokenRegistry.sol';
+import './TokenRegistry.sol';
 
 /**
  * @title Contract for a stake bank that can compute total balances
@@ -52,7 +51,7 @@ contract BalanceStakeBank is BurnableStakeBank {
      * @param _tokenRegistry Token registry that contains white listed tokens.
      * @param _minimumStake Min threshold of amount that can be staked.
      */
-    constructor(ITokenRegistry _tokenRegistry, uint256 _minimumStake) public BurnableStakeBank(_tokenRegistry, _minimumStake) {
+    constructor(TokenRegistry _tokenRegistry, uint256 _minimumStake) public BurnableStakeBank(_tokenRegistry, _minimumStake) {
         StakeData memory temp = StakeData({ amount: 0, staker: address(0) });
         stakeNodes.push(Node(temp, 0, 0));
     }
