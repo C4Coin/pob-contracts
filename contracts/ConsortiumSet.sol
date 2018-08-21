@@ -113,10 +113,19 @@ contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
 
     // @notice Vote to include a validator.
     function addSupport(address validator) public onlyValidator notVoted(validator) freeValidatorSlots {
-        newStatus(validator);
-        AddressVotes.insert(validatorsStatus[validator].support, msg.sender);
+        ValidatorStatus storage s = newStatus(validator); // Only produces new struct if one does not exist. Otherwise nothing happens
+        //AddressVotes.insert(validatorsStatus[validator].support, msg.sender);
+        AddressVotes.insert(s.support, msg.sender);
         validatorsStatus[msg.sender].supported.push(validator);
-        addValidator(validator);
+
+        // As a side effect of this function
+        // Add validator to set if enough support exists
+        if ( !validatorsStatus[validator].isValidator && // Is not already a validator
+             highSupport(validator) )                    // Has enough support to become one
+        {
+           addValidator(validator);
+        }
+
         emit Support(msg.sender, validator, true);
     }
 
@@ -239,7 +248,7 @@ contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
 
     // PRIVATE UTILITY FUNCTIONS
     // @notice Add a status tracker for unknown validator.
-    function newStatus(address validator) private hasNoVotes(validator) {
+    function newStatus(address validator) private hasNoVotes(validator) returns (ValidatorStatus storage) {
         validatorsStatus[validator] = ValidatorStatus({
             isValidator: false,
             index: pendingList.length,
@@ -247,30 +256,38 @@ contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
             supported: new address[](0),
             benignMisbehaviour: AddressVotes.Data({ count: 0 })
         });
+
+        return validatorsStatus[validator];
     }
 
     modifier hasHighSupport(address validator) {
-        if (highSupport(validator)) { _; }
+        require (highSupport(validator));
+        _;
     }
 
     modifier hasLowSupport(address validator) {
-        if (!highSupport(validator)) { _; }
+        require (!highSupport(validator));
+        _;
     }
 
     modifier hasNotBenignMisbehaved(address validator) {
-        if (firstBenignReported(msg.sender, validator) == 0) { _; }
+        require (firstBenignReported(msg.sender, validator) == 0);
+        _;
     }
 
     modifier hasBenignMisbehaved(address validator) {
-        if (firstBenignReported(msg.sender, validator) > 0) { _; }
+        require (firstBenignReported(msg.sender, validator) > 0);
+        _;
     }
 
     modifier hasRepeatedlyBenignMisbehaved(address validator) {
-        if (firstBenignReported(msg.sender, validator) - now > maxInactivity) { _; }
+        require (firstBenignReported(msg.sender, validator) - now > maxInactivity);
+        _;
     }
 
     modifier agreedOnRepeatedBenign(address validator) {
-        if (getRepeatedBenign(validator) > pendingList.length/2) { _; }
+        require (getRepeatedBenign(validator) > pendingList.length/2);
+        _;
     }
 
     modifier freeValidatorSlots() {
@@ -284,11 +301,13 @@ contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
     }
 
     modifier isValidator(address someone) {
-        if (validatorsStatus[someone].isValidator) { _; }
+        require (validatorsStatus[someone].isValidator);
+        _;
     }
 
     modifier isNotValidator(address someone) {
-        if (!validatorsStatus[someone].isValidator) { _; }
+        require (!validatorsStatus[someone].isValidator);
+        _;
     }
 
     modifier notVoted(address validator) {
