@@ -25,14 +25,25 @@ import './ChainSpec.sol';
  * @title Library to access singleton consortium validator set
  */
 library ConsortiumSetSingleton {
-    ConsortiumSet private constant _consortiumSet = new ConsortiumSet();
+    //ConsortiumSet private _consortiumSet;// = new ConsortiumSet();
 
-    function instance() public constant returns (ConsortiumSet) {
+    /*
+    function specInstance() public constant returns (ConsortiumSet) {
+       require( ChainSpec.isEnabled() );
+       return ConsortiumSet( CainSpec.addrOf(keccack256("ConsortiumSet")) );
+    }
+    */
+    function instance(address[] pendingList) public returns (ConsortiumSet) {
         if (ChainSpec.isEnabled()) {
             return ConsortiumSet(ChainSpec.addrOf(keccak256("ConsortiumSet")));
         }
         else {
-            return _consortiumSet;
+            // Initialize if it hasn't been yet
+            //if ( address(_consortiumSet) == 0x0 )
+               //_consortiumSet = new ConsortiumSet(pendingList);
+
+            //return _consortiumSet;
+            return new ConsortiumSet(pendingList);
         }
     }
 }

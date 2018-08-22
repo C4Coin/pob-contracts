@@ -26,13 +26,17 @@ import './PublicSetSingleton.sol';
 // @title Contract to create committee from consortium and public validators
 // @notice Committees change every dynasty
 contract CommitteeSet is SystemValidatorSet {
-    SystemValidatorSet private consortiumSet = ConsortiumSetSingleton.instance();
+    SystemValidatorSet private consortiumSet;// = ConsortiumSetSingleton.instance();
     SystemValidatorSet private publicSet = PublicSetSingleton.instance();
 
     address[] private validatorsList;
 
     uint256 internal constant maxValidators = 80;
     uint256 consortiumToPublicRatio = 3;
+
+    function constructor (address[] initialConsortium) {
+        consortiumSet = ConsortiumSetSingleton.instance( initialConsortium );
+    }
 
     /// Get current validator set (last enacted or initial if no changes ever made)
     function getValidators() public constant returns (address[]) {

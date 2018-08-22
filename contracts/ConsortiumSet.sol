@@ -31,7 +31,7 @@ import './InitialConsortiumSet.sol';
  * @notice Benign misbehaviour causes supprt removal if its called again after maxInactivity.
  * @notice Benign misbehaviour can be absolved before being called the second time.
  */
-contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
+contract ConsortiumSet is SystemValidatorSet {
 
     struct ValidatorStatus {
         bool isValidator;
@@ -55,6 +55,7 @@ contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
     uint internal constant maxValidators = 60;
     address[] private validatorsList;
     mapping(address => ValidatorStatus) private validatorsStatus;
+    address[] internal pendingList;
 
     // Used to lower the constructor cost.
     AddressVotes.Data private initialSupport;
@@ -63,7 +64,10 @@ contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
      * Each validator is initially supported by all others.
      * pendingList should be populated in InitialSet.sol and used here.
      */
-    constructor() public {
+    //constructor() public {
+    constructor(address[] _pendingList) public {
+        pendingList = _pendingList;
+
         initialSupport.count = pendingList.length;
         for (uint i = 0; i < pendingList.length; i++) {
             address supporter = pendingList[i];
@@ -94,7 +98,7 @@ contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
     }
 
     // @notice called when a round is finalized by engine
-    function finalizeChange() public onlySystemAndNotFinalized {
+    function finalizeChange() public {//onlySystemAndNotFinalized {
         validatorsList = pendingList;
         finalized = true;
         emit ChangeFinalized(validatorsList);
@@ -112,7 +116,7 @@ contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
     }
 
     // @notice Vote to include a validator.
-    function addSupport(address validator) public onlyValidator notVoted(validator) freeValidatorSlots {
+    function addSupport(address validator) public onlyValidator { //notVoted(validator) freeValidatorSlots {
         ValidatorStatus storage s = newStatus(validator); // Only produces new struct if one does not exist. Otherwise nothing happens
         //AddressVotes.insert(validatorsStatus[validator].support, msg.sender);
         AddressVotes.insert(s.support, msg.sender);

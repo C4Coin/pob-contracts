@@ -3,14 +3,18 @@ const AddressVotes = artifacts.require('AddressVotes')
 
 contract('Consortium Unit Tests', accounts => {
   let set
+  const validator = accounts[0]
+  const system = '0x00fffffffffffffffffffffffffffffffffffffffe'
+
   beforeEach(async () => {
     av = await AddressVotes.new()
-    set = await ConsortiumSet.new()
+    set = await ConsortiumSet.new([validator])
   })
 
   it('Ctor should populate with initial validators', async () => {
     const val_list = await set.getValidators()
-    assert.deepEqual(val_list, ['0xf5777f8133aae2734396ab1d43ca54ad11bfb737'])
+    console.log('val list: ' + val_list)
+    assert.deepEqual(val_list, [validator]) //['0xf5777f8133aae2734396ab1d43ca54ad11bfb737'])
   })
 
   it('isInValidatorSet handles edge cases', async () => {
@@ -21,29 +25,29 @@ contract('Consortium Unit Tests', accounts => {
     assert.equal(res2, false)
   })
 
-  it('Should add a validator', async () => {
-    const new_val = '0xf'
-    await set.addValidator(new_val)
-
-    assert.deepEqual(await set.getValidators(), [
-      '0xf5777f8133aae2734396ab1d43ca54ad11bfb737',
-      '0xf'
-    ])
-  })
-
   it('Should add a validator only when supported', async () => {
-    //const new_val = '0xf'
-    const new_val = accounts[1]
-    await set.addSupport(new_val, {
-      from: '0xf5777f8133aae2734396ab1d43ca54ad11bfb737'
-    })
-    await set.addValidator(new_val, {
-      from: '0xf5777f8133aae2734396ab1d43ca54ad11bfb737'
-    })
+    // First finalize to allow addSupport to initiate change
+    await set.finalizeChange()
 
-    assert.deepEqual(await set.getValidators(), [
-      '0xf5777f8133aae2734396ab1d43ca54ad11bfb737',
-      accounts[1]
-    ])
+    const new_val = accounts[1]
+
+    // First try to add validator without support.
+    // This should fail
+    try {
+      await set.addValidator(new_val, { from: validator })
+      assert.fail("Expected a revert but it didn't happen...")
+    } catch (e) {
+      const revertFound = e.message.search('revert') >= 0
+      assert(revertFound, `Expected "revert", got ${e} instead`)
+    }
+
+    // Then add support, which will call addValidator
+    await set.addSupport(new_val, { from: validator })
+    console.log('val support: ' + (await set.getSupport(validator)))
+    console.log('new_val support: ' + (await set.getSupport(new_val)))
+
+    await set.finalizeChange()
+
+    assert.deepEqual(await set.getValidators(), [validator, accounts[1]])
   })
 })
