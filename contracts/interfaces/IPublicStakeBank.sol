@@ -22,7 +22,7 @@ pragma solidity ^0.4.24;
  * @title Interface for a stake bank which can burn staked tokens
  * @notice EIP900 + additional methods & events for getting total balances and burning
  */
-interface IBurnableStakeBank {
+interface IPublicStakeBank {
     event Staked(address indexed user, uint256 amount, uint256 total, bytes data);
     event Unstaked(address indexed user, uint256 amount, uint256 total, bytes data);
     event StakeBurned(address indexed user, uint256 burnAmount, bytes data);

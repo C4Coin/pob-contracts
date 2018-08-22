@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.24;
 
 
-import './interfaces/IBurnableStakeBank.sol';
+import './interfaces/IPublicStakeBank.sol';
 import './DelayedStakeBank.sol';
 import './TokenRegistrySingleton.sol';
 
@@ -26,7 +26,7 @@ import './TokenRegistrySingleton.sol';
  * @title Contract for the public facing stake bank implementation.
  * @notice Used to set values for delay and also used by public validator contract for burning.
  */
-contract PublicStakeBank is IBurnableStakeBank, DelayedStakeBank {
+contract PublicStakeBank is IPublicStakeBank, DelayedStakeBank {
     constructor() public DelayedStakeBank(TokenRegistrySingleton.instance(), 1, 1000) {
     }
 }
