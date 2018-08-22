@@ -4,11 +4,11 @@ const AddressVotes = artifacts.require('AddressVotes')
 contract('Consortium Unit Tests', accounts => {
   let set
   const validator = accounts[0]
-  const system = '0x00fffffffffffffffffffffffffffffffffffffffe'
+  const test_system = accounts[9]
 
   beforeEach(async () => {
     av = await AddressVotes.new()
-    set = await ConsortiumSet.new([validator])
+    set = await ConsortiumSet.new([validator], test_system)
   })
 
   it('Ctor should populate with initial validators', async () => {
@@ -27,7 +27,7 @@ contract('Consortium Unit Tests', accounts => {
 
   it('Should add a validator only when supported', async () => {
     // First finalize to allow addSupport to initiate change
-    await set.finalizeChange()
+    await set.finalizeChange({ from: test_system })
 
     const new_val = accounts[1]
 
@@ -46,7 +46,7 @@ contract('Consortium Unit Tests', accounts => {
     console.log('val support: ' + (await set.getSupport(validator)))
     console.log('new_val support: ' + (await set.getSupport(new_val)))
 
-    await set.finalizeChange()
+    await set.finalizeChange({ from: test_system })
 
     assert.deepEqual(await set.getValidators(), [validator, accounts[1]])
   })

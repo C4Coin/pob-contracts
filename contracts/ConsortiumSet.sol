@@ -19,6 +19,7 @@ pragma solidity ^0.4.24;
 
 
 import './interfaces/SystemValidatorSet.sol';
+import './interfaces/CustomOwnable.sol';
 import './libraries/AddressVotes.sol';
 import './InitialConsortiumSet.sol';
 
@@ -31,7 +32,7 @@ import './InitialConsortiumSet.sol';
  * @notice Benign misbehaviour causes supprt removal if its called again after maxInactivity.
  * @notice Benign misbehaviour can be absolved before being called the second time.
  */
-contract ConsortiumSet is SystemValidatorSet {
+contract ConsortiumSet is SystemValidatorSet, CustomOwnable {
 
     struct ValidatorStatus {
         bool isValidator;
@@ -65,7 +66,7 @@ contract ConsortiumSet is SystemValidatorSet {
      * pendingList should be populated in InitialSet.sol and used here.
      */
     //constructor() public {
-    constructor(address[] _pendingList) public {
+    constructor(address[] _pendingList, address _owner) CustomOwnable(_owner) public {
         pendingList = _pendingList;
 
         initialSupport.count = pendingList.length;
@@ -98,7 +99,9 @@ contract ConsortiumSet is SystemValidatorSet {
     }
 
     // @notice called when a round is finalized by engine
-    function finalizeChange() public {//onlySystemAndNotFinalized {
+    function finalizeChange() public onlyOwner {//onlySystemAndNotFinalized {
+        require( !finalized );
+
         validatorsList = pendingList;
         finalized = true;
         emit ChangeFinalized(validatorsList);

@@ -33,7 +33,7 @@ library ConsortiumSetSingleton {
        return ConsortiumSet( CainSpec.addrOf(keccack256("ConsortiumSet")) );
     }
     */
-    function instance(address[] pendingList) public returns (ConsortiumSet) {
+    function instance(address[] pendingList, address _owner) public returns (ConsortiumSet) {
         if (ChainSpec.isEnabled()) {
             return ConsortiumSet(ChainSpec.addrOf(keccak256("ConsortiumSet")));
         }
@@ -43,7 +43,7 @@ library ConsortiumSetSingleton {
                //_consortiumSet = new ConsortiumSet(pendingList);
 
             //return _consortiumSet;
-            return new ConsortiumSet(pendingList);
+            return new ConsortiumSet(pendingList, _owner);
         }
     }
 }

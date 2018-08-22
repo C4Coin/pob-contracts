@@ -34,8 +34,8 @@ contract CommitteeSet is SystemValidatorSet {
     uint256 internal constant maxValidators = 80;
     uint256 consortiumToPublicRatio = 3;
 
-    function constructor (address[] initialConsortium) {
-        consortiumSet = ConsortiumSetSingleton.instance( initialConsortium );
+    function constructor (address[] initialConsortium, address _owner) {
+        consortiumSet = ConsortiumSetSingleton.instance( initialConsortium, _owner );
     }
 
     /// Get current validator set (last enacted or initial if no changes ever made)
