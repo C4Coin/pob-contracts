@@ -24,10 +24,8 @@ import './interfaces/IBurnableERC20.sol';
 import './TokenRegistry.sol';
 
 
-// @title Contract for to keep track of stake (checkpoint history total staked at block) and burn tokens
+// @title Contract to store stake (checkpoint history total staked at block) and burn tokens
 contract BurnableStakeBank is Lockable {
-    event Debug(address user, uint256 amt, bytes32 b, bytes bb);
-
     using SafeMath for uint256;
 
     struct Checkpoint {
@@ -39,8 +37,6 @@ contract BurnableStakeBank is Lockable {
     Checkpoint[] public stakeHistory;
     Checkpoint[] public burnHistory;
     uint256 minimumStake;
-    address internal constant systemAddress = 0x00fffffffffffffffffffffffffffffffffffffffe;
-
 
     mapping (address => Checkpoint[]) public stakesFor;
     mapping (address => Checkpoint[]) public burnsFor;
