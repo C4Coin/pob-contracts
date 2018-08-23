@@ -21,6 +21,7 @@ pragma solidity ^0.4.24;
 import './interfaces/SystemValidatorSet.sol';
 import './ConsortiumSetSingleton.sol';
 import './PublicSetSingleton.sol';
+import './ChainSpec.sol';
 
 
 // @title Contract to create committee from consortium and public validators
@@ -34,8 +35,15 @@ contract CommitteeSet is SystemValidatorSet {
     uint256 internal constant maxValidators = 80;
     uint256 consortiumToPublicRatio = 3;
 
-    function constructor (address[] initialConsortium, address _owner) {
-        consortiumSet = ConsortiumSetSingleton.instance( initialConsortium, _owner );
+    constructor (address[] initialConsortium, address _owner) {
+        //consortiumSet = ConsortiumSetSingleton.instance( initialConsortium, _owner );
+
+        // Generate a new consortium set or use the chain spec
+        if (ChainSpec.isEnabled())
+            consortiumSet = ConsortiumSet( ChainSpec.addrOf(keccak256("ConsortiumSet")) );
+        else
+            consortiumSet = new ConsortiumSet(initialConsortium, _owner);
+
     }
 
     /// Get current validator set (last enacted or initial if no changes ever made)

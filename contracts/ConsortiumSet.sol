@@ -156,24 +156,31 @@ contract ConsortiumSet is SystemValidatorSet, CustomOwnable {
      */
     function removeValidator(address validator) public isValidator(validator) hasLowSupport(validator) {
         uint removedIndex = validatorsStatus[validator].index;
-        // Can not remove the last validator.
-        uint lastIndex = pendingList.length-1;
-        address lastValidator = pendingList[lastIndex];
-        // Override the removed validator with the last one.
+
+        // Override the removed validator with the last on the list
+        uint lastIndex            = pendingList.length-1;
+        address lastValidator     = pendingList[lastIndex];
         pendingList[removedIndex] = lastValidator;
-        // Update the index of the last validator.
-        validatorsStatus[lastValidator].index = removedIndex;
-        // Remove last validator
+
+        // Remove duplicate of last validator
+        delete pendingList[lastIndex];
         pendingList.length--;
-        // Reset validator status.
+
+        // Update the index of the last validator
+        validatorsStatus[lastValidator].index = removedIndex;
+
+        // Reset removed validator status
         validatorsStatus[validator].index = 0;
         validatorsStatus[validator].isValidator = false;
+
         // Remove all support given by the removed validator.
         address[] storage toRemove = validatorsStatus[validator].supported;
         for (uint i = 0; i < toRemove.length; i++) {
-            removeSupport(validator, toRemove[i]);
+            // False parameter avoids recursion
+            removeSupport(validator, toRemove[i], false);
         }
         delete validatorsStatus[validator].supported;
+
         initiateChange();
     }
 
@@ -194,7 +201,7 @@ contract ConsortiumSet is SystemValidatorSet, CustomOwnable {
      * @notice The proof bytes are not yet implemented
      */
     function reportMalicious(address validator, uint blockNumber, bytes) public onlyValidator isRecent(blockNumber) {
-        removeSupport(msg.sender, validator);
+        removeSupport(msg.sender, validator, true);
         emit Report(msg.sender, validator, true);
     }
 
@@ -215,11 +222,18 @@ contract ConsortiumSet is SystemValidatorSet, CustomOwnable {
     }
 
     // @notice Vote to remove support for a validator.
-    function removeSupport(address sender, address validator) private {
-        require(AddressVotes.remove(validatorsStatus[validator].support, sender));
+    function removeSupport(address sender, address validator, bool alsoRemove) private {
+        require( AddressVotes.remove(validatorsStatus[validator].support, sender) );
         emit Support(sender, validator, false);
-        // Remove validator from the list if there is not enough support.
-        removeValidator(validator);
+
+        // As a side effect of this function
+        // Caller can choose to remove validator from set if there is not enough support
+        if ( alsoRemove &&                              // Caller is willing to remove validator
+             validatorsStatus[validator].isValidator && // Is infact a validator
+             !highSupport(validator) )                  // Not enough support to stay as one
+        {
+           removeValidator(validator);
+        }
     }
 
     // @notice Log desire to change the current list.
@@ -243,7 +257,7 @@ contract ConsortiumSet is SystemValidatorSet, CustomOwnable {
     function confirmedRepeatedBenign(address validator) private agreedOnRepeatedBenign(validator) {
         validatorsStatus[validator].firstBenign[msg.sender] = 0;
         AddressVotes.remove(validatorsStatus[validator].benignMisbehaviour, msg.sender);
-        removeSupport(msg.sender, validator);
+        removeSupport(msg.sender, validator, true);
     }
 
     // @notice Absolve a validator from a benign misbehaviour.

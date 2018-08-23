@@ -43,11 +43,25 @@ contract('Consortium Unit Tests', accounts => {
 
     // Then add support, which will call addValidator
     await set.addSupport(new_val, { from: validator })
-    console.log('val support: ' + (await set.getSupport(validator)))
-    console.log('new_val support: ' + (await set.getSupport(new_val)))
 
     await set.finalizeChange({ from: test_system })
 
     assert.deepEqual(await set.getValidators(), [validator, accounts[1]])
+  })
+
+  it('Add and remove a validator', async () => {
+    const new_val = accounts[1]
+
+    // Add new validator
+    await set.finalizeChange({ from: test_system })
+    await set.addSupport(new_val, { from: validator })
+    await set.finalizeChange({ from: test_system })
+
+    // Remove new validator by removing support
+    await set.reportMalicious(new_val, 0, '0x0', { from: validator })
+    await set.finalizeChange({ from: test_system })
+
+    // Should only have the original validator
+    assert.deepEqual(await set.getValidators(), [validator])
   })
 })
