@@ -99,7 +99,7 @@ contract ConsortiumSet is SystemValidatorSet, CustomOwnable {
     }
 
     // @notice called when a round is finalized by engine
-    function finalizeChange() public onlyOwner {//onlySystemAndNotFinalized {
+    function finalizeChange() public onlyOwner {
         require( !finalized );
 
         validatorsList = pendingList;
@@ -119,9 +119,8 @@ contract ConsortiumSet is SystemValidatorSet, CustomOwnable {
     }
 
     // @notice Vote to include a validator.
-    function addSupport(address validator) public onlyValidator { //notVoted(validator) freeValidatorSlots {
+    function addSupport(address validator) public onlyValidator notVoted(validator) freeValidatorSlots {
         ValidatorStatus storage s = newStatus(validator); // Only produces new struct if one does not exist. Otherwise nothing happens
-        //AddressVotes.insert(validatorsStatus[validator].support, msg.sender);
         AddressVotes.insert(s.support, msg.sender);
         validatorsStatus[msg.sender].supported.push(validator);
 
