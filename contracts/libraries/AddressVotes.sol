@@ -40,18 +40,19 @@ library AddressVotes {
     }
 
     // Voter casts a vote.
-    function insert(Data storage self, address voter) public returns (bool) {
-        if (self.inserted[voter]) { return false; }
+    function insert(Data storage self, address voter) public {
+        require( !self.inserted[voter] );
+
         self.count++;
         self.inserted[voter] = true;
-        return true;
+        //return true;
     }
 
     // Retract a vote by a voter.
-    function remove(Data storage self, address voter) public returns (bool) {
-        if (!self.inserted[voter]) { return false; }
+    function remove(Data storage self, address voter) public {
+        require ( self.inserted[voter] );
+
         self.count--;
         self.inserted[voter] = false;
-        return true;
     }
 }
