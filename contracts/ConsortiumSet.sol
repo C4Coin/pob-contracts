@@ -225,7 +225,7 @@ contract ConsortiumSet is SystemValidatorSet, CustomOwnable {
 
     // @notice Vote to remove support for a validator.
     function removeSupport(address sender, address validator, bool alsoRemove) private {
-        require( AddressVotes.remove(validatorsStatus[validator].support, sender) );
+        AddressVotes.remove(validatorsStatus[validator].support, sender);
         emit Support(sender, validator, false);
 
         // As a side effect of this function
