@@ -33,7 +33,6 @@ import './InitialConsortiumSet.sol';
  * @notice Benign misbehaviour can be absolved before being called the second time.
  */
 contract ConsortiumSet is SystemValidatorSet, CustomOwnable {
-
     struct ValidatorStatus {
         bool isValidator;
 
@@ -120,7 +119,10 @@ contract ConsortiumSet is SystemValidatorSet, CustomOwnable {
 
     // @notice Vote to include a validator.
     function addSupport(address validator) public onlyValidator notVoted(validator) freeValidatorSlots {
-        ValidatorStatus storage s = newStatus(validator); // Only produces new struct if one does not exist. Otherwise nothing happens
+        // Produce new struct if one does not exist. Return record
+        ValidatorStatus storage s = newStatus(validator);
+
+        // Add support
         AddressVotes.insert(s.support, msg.sender);
         validatorsStatus[msg.sender].supported.push(validator);
 
@@ -237,7 +239,7 @@ contract ConsortiumSet is SystemValidatorSet, CustomOwnable {
     }
 
     // @notice Log desire to change the current list.
-    function initiateChange() private whenFinalized {
+    function initiateChange() private {//whenFinalized {
         finalized = false;
         emit InitiateChange(blockhash(block.number - 1), pendingList);
     }
@@ -268,14 +270,17 @@ contract ConsortiumSet is SystemValidatorSet, CustomOwnable {
 
     // PRIVATE UTILITY FUNCTIONS
     // @notice Add a status tracker for unknown validator.
-    function newStatus(address validator) private hasNoVotes(validator) returns (ValidatorStatus storage) {
-        validatorsStatus[validator] = ValidatorStatus({
-            isValidator: false,
-            index: pendingList.length,
-            support: AddressVotes.Data({ count: 0 }),
-            supported: new address[](0),
-            benignMisbehaviour: AddressVotes.Data({ count: 0 })
-        });
+    function newStatus(address validator) private returns (ValidatorStatus storage) {
+        // If validator has no votes, create a record for it
+        if ( AddressVotes.count(validatorsStatus[validator].support) == 0 ) {
+           validatorsStatus[validator] = ValidatorStatus({
+               isValidator: false,
+               index: pendingList.length,
+               support: AddressVotes.Data({ count: 0 }),
+               supported: new address[](0),
+               benignMisbehaviour: AddressVotes.Data({ count: 0 })
+           });
+        }
 
         return validatorsStatus[validator];
     }
@@ -333,9 +338,5 @@ contract ConsortiumSet is SystemValidatorSet, CustomOwnable {
     modifier notVoted(address validator) {
         require(!AddressVotes.contains(validatorsStatus[validator].support, msg.sender));
         _;
-    }
-
-    modifier hasNoVotes(address validator) {
-        if (AddressVotes.count(validatorsStatus[validator].support) == 0) { _; }
     }
 }

@@ -64,4 +64,39 @@ contract('Consortium Unit Tests', accounts => {
     // Should only have the original validator
     assert.deepEqual(await set.getValidators(), [validator])
   })
+
+  it('Validator list should not update until finalize', async () => {
+    const new_val = accounts[1]
+    const newer_val = accounts[2]
+
+    /*
+     * Add first new validator
+     */
+    await set.finalizeChange({ from: test_system })
+    await set.addSupport(new_val, { from: validator })
+
+    // Shouldn't be there since its not finalized
+    assert.deepEqual(await set.getValidators(), [validator])
+
+    // Now finalize
+    await set.finalizeChange({ from: test_system })
+
+    // And it should be there
+    assert.deepEqual(await set.getValidators(), [validator, new_val])
+
+    /*
+     * Add next new validator
+     */
+    await set.addSupport(newer_val, { from: validator })
+    await set.addSupport(newer_val, { from: new_val })
+
+    // Shouldn't be there yet
+    assert.deepEqual(await set.getValidators(), [validator, new_val])
+
+    // Now finalize
+    await set.finalizeChange({ from: test_system })
+
+    // And it should be there
+    assert.deepEqual(await set.getValidators(), [validator, new_val, newer_val])
+  })
 })
