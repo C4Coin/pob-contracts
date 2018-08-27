@@ -19,14 +19,14 @@ pragma solidity ^0.4.24;
 
 
 import './interfaces/SystemValidatorSet.sol';
-import './interfaces/IStakeBank.sol';
+import './interfaces/IPublicStakeBank.sol';
 import './PublicStakeBankSingleton.sol';
-import './libraries/FtsLib.sol';
+import './libraries/Fts.sol';
 
 
 // @title Contract for public validators that wraps the stake bank used by public stakers
 contract PublicSet is SystemValidatorSet {
-    IStakeBank private publicStakeBank = PublicStakeBankSingleton.instance();
+    IPublicStakeBank private publicStakeBank = PublicStakeBankSingleton.instance();
 
     uint internal constant maxValidators = 20;
 
@@ -51,7 +51,7 @@ contract PublicSet is SystemValidatorSet {
             stakerIndices[i] = stakerIndices[i] + stakerIndices[i-1];
         }
         uint256 totalCoins = publicStakeBank.totalStaked(); // TODO: maybe use totalStakedAt(block.number)?
-        validatorsList = FtsLib.fts(seed, stakerIds, stakerIndices, totalCoins, maxValidators);
+        validatorsList = Fts.fts(seed, stakerIds, stakerIndices, totalCoins, maxValidators);
 
         // TODO: Is this where we burn?
 

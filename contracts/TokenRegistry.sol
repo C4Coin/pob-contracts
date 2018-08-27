@@ -19,8 +19,12 @@ pragma solidity ^0.4.24;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
+
 contract TokenRegistry is Ownable {
     mapping (bytes32 => address) public tokens;
+
+    constructor() public Ownable() {
+    }
 
     function contains(bytes32 tokenId) view public returns (bool) {
         return tokens[tokenId] == address(0) ? false : true;

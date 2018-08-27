@@ -1,10 +1,10 @@
-const FtsLib = artifacts.require('Fts')
+const FtsAdapter = artifacts.require('FtsAdapter')
 
 contract('Fts library', accounts => {
-  let ftsLib
+  let ftsAdapter
 
   beforeEach(async () => {
-    ftsLib = await FtsLib.new()
+    ftsAdapter = await FtsAdapter.new()
   })
 
   it('Should return the second staker from the list', async () => {
@@ -14,8 +14,9 @@ contract('Fts library', accounts => {
     // Hash of that hash as uint256 is 7.7325989696766893111127756213298094134926739482120969801295632937101989508141e+76
     // That number % totalCoin (650) is 162
     // Index 162 equates to 3rd account
-
-    let staker = await ftsLib.fts.call(
+    // console.log(ftsLib);
+    // console.log(ftsLib);
+    let staker = await ftsAdapter.fts.call(
       '00',
       accounts.slice(0, 4), // Staker address list
       [0, 10, 110, 610, 650], // Accumulated index list with a 0 prepended

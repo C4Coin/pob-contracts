@@ -19,11 +19,13 @@ pragma solidity ^0.4.24;
 
 
 /**
- * @title Interface for a stake bank based on EIP900 standard with extra method for getting balances
+ * @title Interface for a stake bank which can burn staked tokens
+ * @notice EIP900 + additional methods & events for getting total balances and burning
  */
-contract IStakeBank {
+interface IPublicStakeBank {
     event Staked(address indexed user, uint256 amount, uint256 total, bytes data);
     event Unstaked(address indexed user, uint256 amount, uint256 total, bytes data);
+    event StakeBurned(address indexed user, uint256 burnAmount, bytes data);
 
     function stake(uint256 amount, bytes data) public;
     function stakeFor(address user, uint256 amount, bytes data) public;
@@ -37,4 +39,5 @@ contract IStakeBank {
     function totalStakedAt(uint256 blockNumber) public view returns (uint256);
 
     function totalBalances() public view returns (address[], uint[]);
+    function burnFor(address user, uint256 burnAmount, bytes data) public;
 }
