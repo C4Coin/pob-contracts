@@ -65,7 +65,7 @@ contract ConsortiumSet is SystemValidatorSet, CustomOwnable {
      * pendingList should be populated in InitialSet.sol and used here.
      */
     //constructor() public {
-    constructor(address[] _pendingList, address _owner) CustomOwnable(_owner) public {
+    constructor(address[] _pendingList, address _owner) public CustomOwnable(_owner) {
         pendingList = _pendingList;
 
         initialSupport.count = pendingList.length;
@@ -131,7 +131,7 @@ contract ConsortiumSet is SystemValidatorSet, CustomOwnable {
         if ( !validatorsStatus[validator].isValidator && // Is not already a validator
              highSupport(validator) )                    // Has enough support to become one
         {
-           addValidator(validator);
+            addValidator(validator);
         }
 
         emit Support(msg.sender, validator, true);
@@ -230,11 +230,10 @@ contract ConsortiumSet is SystemValidatorSet, CustomOwnable {
 
         // As a side effect of this function
         // Caller can choose to remove validator from set if there is not enough support
-        if ( alsoRemove &&                              // Caller is willing to remove validator
-             validatorsStatus[validator].isValidator && // Is infact a validator
-             !highSupport(validator) )                  // Not enough support to stay as one
-        {
-           removeValidator(validator);
+        if (alsoRemove &&                              // Caller is willing to remove validator
+            validatorsStatus[validator].isValidator && // Is infact a validator
+            !highSupport(validator)) {                 // Not enough support to stay as one
+            removeValidator(validator);
         }
     }
 
@@ -273,13 +272,13 @@ contract ConsortiumSet is SystemValidatorSet, CustomOwnable {
     function newStatus(address validator) private returns (ValidatorStatus storage) {
         // If validator has no votes, create a record for it
         if ( AddressVotes.count(validatorsStatus[validator].support) == 0 ) {
-           validatorsStatus[validator] = ValidatorStatus({
-               isValidator: false,
-               index: pendingList.length,
-               support: AddressVotes.Data({ count: 0 }),
-               supported: new address[](0),
-               benignMisbehaviour: AddressVotes.Data({ count: 0 })
-           });
+            validatorsStatus[validator] = ValidatorStatus({
+                isValidator: false,
+                index: pendingList.length,
+                support: AddressVotes.Data({ count: 0 }),
+                supported: new address[](0),
+                benignMisbehaviour: AddressVotes.Data({ count: 0 })
+            });
         }
 
         return validatorsStatus[validator];

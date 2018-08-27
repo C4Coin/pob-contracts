@@ -40,7 +40,7 @@ contract CommitteeSet is SystemValidatorSet {
 
         // Generate a new consortium set or use the chain spec
         if (ChainSpec.isEnabled())
-            consortiumSet = ConsortiumSet( ChainSpec.addrOf(keccak256("ConsortiumSet")) );
+            consortiumSet = ConsortiumSet( ChainSpec.addrOf(keccak256('ConsortiumSet')) );
         else
             consortiumSet = new ConsortiumSet(initialConsortium, _owner);
 
@@ -68,7 +68,7 @@ contract CommitteeSet is SystemValidatorSet {
             uint256 indexPublic = 0;
             uint256 i = 0;
             // If public nodes > 25% then add more consortium validators
-            if ( publicList.length * consortiumToPublicRatio >= consortiumList.length) {
+            if (publicList.length * consortiumToPublicRatio >= consortiumList.length) {
                 // Calculate how many more consortium members we need
                 uint256 deltaConsortium = publicList.length * consortiumToPublicRatio - consortiumList.length;
                 for( i=0; i < deltaConsortium; i++) {

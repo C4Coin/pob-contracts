@@ -40,7 +40,7 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
     Checkpoint[] public burnHistory;
     uint256 public stakeLockBlockInterval = 1000;
     uint256 minimumStake;
-    address internal constant systemAddress = 0x00fffffffffffffffffffffffffffffffffffffffe;
+    address internal constant SYSTEM_ADDRESS = 0x00fffffffffffffffffffffffffffffffffffffffe;
 
 
     mapping (address => Checkpoint[]) public stakesFor;
@@ -297,10 +297,10 @@ contract BurnableStakeBank is IBurnableStakeBank, Lockable {
             out |= bytes32(b[offset + i] & 0xFF) >> (i * 8);
         }
         return out;
-   }
+    }
 
-   modifier onlySystem() {
-       require(msg.sender == systemAddress);
-       _;
-   }
+    modifier onlySystem() {
+        require(msg.sender == SYSTEM_ADDRESS);
+        _;
+    }
 }
