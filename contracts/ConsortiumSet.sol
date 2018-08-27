@@ -19,6 +19,7 @@ pragma solidity ^0.4.24;
 
 
 import './interfaces/SystemValidatorSet.sol';
+import './interfaces/CustomOwnable.sol';
 import './libraries/AddressVotes.sol';
 import './InitialConsortiumSet.sol';
 
@@ -31,8 +32,7 @@ import './InitialConsortiumSet.sol';
  * @notice Benign misbehaviour causes supprt removal if its called again after maxInactivity.
  * @notice Benign misbehaviour can be absolved before being called the second time.
  */
-contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
-
+contract ConsortiumSet is SystemValidatorSet, CustomOwnable {
     struct ValidatorStatus {
         bool isValidator;
 
@@ -55,6 +55,7 @@ contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
     uint internal constant maxValidators = 60;
     address[] private validatorsList;
     mapping(address => ValidatorStatus) private validatorsStatus;
+    address[] internal pendingList;
 
     // Used to lower the constructor cost.
     AddressVotes.Data private initialSupport;
@@ -63,7 +64,10 @@ contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
      * Each validator is initially supported by all others.
      * pendingList should be populated in InitialSet.sol and used here.
      */
-    constructor() public {
+    //constructor() public {
+    constructor(address[] _pendingList, address _owner) public CustomOwnable(_owner) {
+        pendingList = _pendingList;
+
         initialSupport.count = pendingList.length;
         for (uint i = 0; i < pendingList.length; i++) {
             address supporter = pendingList[i];
@@ -89,12 +93,14 @@ contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
     }
 
     // @notice Called to lookup if address belongs to a validator
-    function isInValidatorSet(address validator) public returns (bool) {
+    function isInValidatorSet(address validator) public view returns (bool) {
         return validatorsStatus[validator].isValidator;
     }
 
     // @notice called when a round is finalized by engine
-    function finalizeChange() public onlySystemAndNotFinalized {
+    function finalizeChange() public onlyOwner {
+        require( !finalized );
+
         validatorsList = pendingList;
         finalized = true;
         emit ChangeFinalized(validatorsList);
@@ -113,10 +119,21 @@ contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
 
     // @notice Vote to include a validator.
     function addSupport(address validator) public onlyValidator notVoted(validator) freeValidatorSlots {
-        newStatus(validator);
-        AddressVotes.insert(validatorsStatus[validator].support, msg.sender);
+        // Produce new struct if one does not exist. Return record
+        ValidatorStatus storage s = newStatus(validator);
+
+        // Add support
+        AddressVotes.insert(s.support, msg.sender);
         validatorsStatus[msg.sender].supported.push(validator);
-        addValidator(validator);
+
+        // As a side effect of this function
+        // Add validator to set if enough support exists
+        if ( !validatorsStatus[validator].isValidator && // Is not already a validator
+             highSupport(validator) )                    // Has enough support to become one
+        {
+            addValidator(validator);
+        }
+
         emit Support(msg.sender, validator, true);
     }
 
@@ -141,24 +158,31 @@ contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
      */
     function removeValidator(address validator) public isValidator(validator) hasLowSupport(validator) {
         uint removedIndex = validatorsStatus[validator].index;
-        // Can not remove the last validator.
-        uint lastIndex = pendingList.length-1;
-        address lastValidator = pendingList[lastIndex];
-        // Override the removed validator with the last one.
+
+        // Override the removed validator with the last on the list
+        uint lastIndex            = pendingList.length-1;
+        address lastValidator     = pendingList[lastIndex];
         pendingList[removedIndex] = lastValidator;
-        // Update the index of the last validator.
-        validatorsStatus[lastValidator].index = removedIndex;
-        // Remove last validator
+
+        // Remove duplicate of last validator
+        delete pendingList[lastIndex];
         pendingList.length--;
-        // Reset validator status.
+
+        // Update the index of the last validator
+        validatorsStatus[lastValidator].index = removedIndex;
+
+        // Reset removed validator status
         validatorsStatus[validator].index = 0;
         validatorsStatus[validator].isValidator = false;
+
         // Remove all support given by the removed validator.
         address[] storage toRemove = validatorsStatus[validator].supported;
         for (uint i = 0; i < toRemove.length; i++) {
-            removeSupport(validator, toRemove[i]);
+            // False parameter avoids recursion
+            removeSupport(validator, toRemove[i], false);
         }
         delete validatorsStatus[validator].supported;
+
         initiateChange();
     }
 
@@ -179,7 +203,7 @@ contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
      * @notice The proof bytes are not yet implemented
      */
     function reportMalicious(address validator, uint blockNumber, bytes) public onlyValidator isRecent(blockNumber) {
-        removeSupport(msg.sender, validator);
+        removeSupport(msg.sender, validator, true);
         emit Report(msg.sender, validator, true);
     }
 
@@ -200,15 +224,21 @@ contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
     }
 
     // @notice Vote to remove support for a validator.
-    function removeSupport(address sender, address validator) private {
-        require(AddressVotes.remove(validatorsStatus[validator].support, sender));
+    function removeSupport(address sender, address validator, bool alsoRemove) private {
+        AddressVotes.remove(validatorsStatus[validator].support, sender);
         emit Support(sender, validator, false);
-        // Remove validator from the list if there is not enough support.
-        removeValidator(validator);
+
+        // As a side effect of this function
+        // Caller can choose to remove validator from set if there is not enough support
+        if (alsoRemove &&                              // Caller is willing to remove validator
+            validatorsStatus[validator].isValidator && // Is infact a validator
+            !highSupport(validator)) {                 // Not enough support to stay as one
+            removeValidator(validator);
+        }
     }
 
     // @notice Log desire to change the current list.
-    function initiateChange() private whenFinalized {
+    function initiateChange() private {//whenFinalized {
         finalized = false;
         emit InitiateChange(blockhash(block.number - 1), pendingList);
     }
@@ -228,7 +258,7 @@ contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
     function confirmedRepeatedBenign(address validator) private agreedOnRepeatedBenign(validator) {
         validatorsStatus[validator].firstBenign[msg.sender] = 0;
         AddressVotes.remove(validatorsStatus[validator].benignMisbehaviour, msg.sender);
-        removeSupport(msg.sender, validator);
+        removeSupport(msg.sender, validator, true);
     }
 
     // @notice Absolve a validator from a benign misbehaviour.
@@ -239,38 +269,49 @@ contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
 
     // PRIVATE UTILITY FUNCTIONS
     // @notice Add a status tracker for unknown validator.
-    function newStatus(address validator) private hasNoVotes(validator) {
-        validatorsStatus[validator] = ValidatorStatus({
-            isValidator: false,
-            index: pendingList.length,
-            support: AddressVotes.Data({ count: 0 }),
-            supported: new address[](0),
-            benignMisbehaviour: AddressVotes.Data({ count: 0 })
-        });
+    function newStatus(address validator) private returns (ValidatorStatus storage) {
+        // If validator has no votes, create a record for it
+        if ( AddressVotes.count(validatorsStatus[validator].support) == 0 ) {
+            validatorsStatus[validator] = ValidatorStatus({
+                isValidator: false,
+                index: pendingList.length,
+                support: AddressVotes.Data({ count: 0 }),
+                supported: new address[](0),
+                benignMisbehaviour: AddressVotes.Data({ count: 0 })
+            });
+        }
+
+        return validatorsStatus[validator];
     }
 
     modifier hasHighSupport(address validator) {
-        if (highSupport(validator)) { _; }
+        require (highSupport(validator));
+        _;
     }
 
     modifier hasLowSupport(address validator) {
-        if (!highSupport(validator)) { _; }
+        require (!highSupport(validator));
+        _;
     }
 
     modifier hasNotBenignMisbehaved(address validator) {
-        if (firstBenignReported(msg.sender, validator) == 0) { _; }
+        require (firstBenignReported(msg.sender, validator) == 0);
+        _;
     }
 
     modifier hasBenignMisbehaved(address validator) {
-        if (firstBenignReported(msg.sender, validator) > 0) { _; }
+        require (firstBenignReported(msg.sender, validator) > 0);
+        _;
     }
 
     modifier hasRepeatedlyBenignMisbehaved(address validator) {
-        if (firstBenignReported(msg.sender, validator) - now > maxInactivity) { _; }
+        require (firstBenignReported(msg.sender, validator) - now > maxInactivity);
+        _;
     }
 
     modifier agreedOnRepeatedBenign(address validator) {
-        if (getRepeatedBenign(validator) > pendingList.length/2) { _; }
+        require (getRepeatedBenign(validator) > pendingList.length/2);
+        _;
     }
 
     modifier freeValidatorSlots() {
@@ -284,19 +325,17 @@ contract ConsortiumSet is SystemValidatorSet, InitialConsortiumSet {
     }
 
     modifier isValidator(address someone) {
-        if (validatorsStatus[someone].isValidator) { _; }
+        require (validatorsStatus[someone].isValidator);
+        _;
     }
 
     modifier isNotValidator(address someone) {
-        if (!validatorsStatus[someone].isValidator) { _; }
+        require (!validatorsStatus[someone].isValidator);
+        _;
     }
 
     modifier notVoted(address validator) {
         require(!AddressVotes.contains(validatorsStatus[validator].support, msg.sender));
         _;
-    }
-
-    modifier hasNoVotes(address validator) {
-        if (AddressVotes.count(validatorsStatus[validator].support) == 0) { _; }
     }
 }

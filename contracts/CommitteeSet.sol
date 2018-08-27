@@ -21,18 +21,28 @@ pragma solidity ^0.4.24;
 import './interfaces/SystemValidatorSet.sol';
 import './ConsortiumSetSingleton.sol';
 import './PublicSetSingleton.sol';
+import './ChainSpec.sol';
 
 
 // @title Contract to create committee from consortium and public validators
 // @notice Committees change every dynasty
 contract CommitteeSet is SystemValidatorSet {
-    SystemValidatorSet private consortiumSet = ConsortiumSetSingleton.instance();
+    SystemValidatorSet private consortiumSet;
     SystemValidatorSet private publicSet = PublicSetSingleton.instance();
 
     address[] private validatorsList;
 
     uint256 internal constant maxValidators = 80;
     uint256 consortiumToPublicRatio = 3;
+
+    constructor (address[] initialConsortium, address _owner) {
+        // Generate a new consortium set or use the chain spec
+        if (ChainSpec.isEnabled())
+            consortiumSet = ConsortiumSet( ChainSpec.addrOf(keccak256('ConsortiumSet')) );
+        else
+            consortiumSet = new ConsortiumSet(initialConsortium, _owner);
+
+    }
 
     /// Get current validator set (last enacted or initial if no changes ever made)
     function getValidators() public constant returns (address[]) {
@@ -56,7 +66,7 @@ contract CommitteeSet is SystemValidatorSet {
             uint256 indexPublic = 0;
             uint256 i = 0;
             // If public nodes > 25% then add more consortium validators
-            if ( publicList.length * consortiumToPublicRatio >= consortiumList.length) {
+            if (publicList.length * consortiumToPublicRatio >= consortiumList.length) {
                 // Calculate how many more consortium members we need
                 uint256 deltaConsortium = publicList.length * consortiumToPublicRatio - consortiumList.length;
                 for( i=0; i < deltaConsortium; i++) {

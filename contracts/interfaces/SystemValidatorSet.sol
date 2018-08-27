@@ -50,7 +50,7 @@ contract SystemValidatorSet is IValidatorSet, Lockable {
         seed = _seed;
     }
 
-    function isInValidatorSet(address validator) public returns (bool);
+    function isInValidatorSet(address validator) public view returns (bool);
 
     function isChangingDynasty() public returns (bool) {
         return (block.number % dynastyInterval) == 0;

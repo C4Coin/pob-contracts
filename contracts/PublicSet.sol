@@ -61,7 +61,7 @@ contract PublicSet is SystemValidatorSet {
         emit ChangeFinalized(validatorsList);
     }
 
-    function isInValidatorSet(address validator) public returns (bool) {
+    function isInValidatorSet(address validator) public view returns (bool) {
         // TODO
         return false;
     }
