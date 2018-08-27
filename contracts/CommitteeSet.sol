@@ -27,7 +27,7 @@ import './ChainSpec.sol';
 // @title Contract to create committee from consortium and public validators
 // @notice Committees change every dynasty
 contract CommitteeSet is SystemValidatorSet {
-    SystemValidatorSet private consortiumSet;// = ConsortiumSetSingleton.instance();
+    SystemValidatorSet private consortiumSet;
     SystemValidatorSet private publicSet = PublicSetSingleton.instance();
 
     address[] private validatorsList;
@@ -36,8 +36,6 @@ contract CommitteeSet is SystemValidatorSet {
     uint256 consortiumToPublicRatio = 3;
 
     constructor (address[] initialConsortium, address _owner) {
-        //consortiumSet = ConsortiumSetSingleton.instance( initialConsortium, _owner );
-
         // Generate a new consortium set or use the chain spec
         if (ChainSpec.isEnabled())
             consortiumSet = ConsortiumSet( ChainSpec.addrOf(keccak256('ConsortiumSet')) );

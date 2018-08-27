@@ -37,7 +37,6 @@ contract BurnableStakeBank is Lockable {
     Checkpoint[] public stakeHistory;
     Checkpoint[] public burnHistory;
     uint256 minimumStake;
-    address internal constant SYSTEM_ADDRESS = 0x00fffffffffffffffffffffffffffffffffffffffe;
 
     mapping (address => Checkpoint[]) public stakesFor;
     mapping (address => Checkpoint[]) public burnsFor;
