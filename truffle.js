@@ -8,13 +8,6 @@ const {
   contributors
 } = require('./package.json')
 
-const DEFAULT = {
-  host: 'localhost',
-  port: 8545,
-  network_id: '*', // Match any network id
-  gas: 4600000
-}
-
 module.exports = {
   packageName,
   version,
@@ -23,7 +16,11 @@ module.exports = {
   license,
   authors: [author, ...contributors],
   networks: {
-    geth: { ...DEFAULT, gas: 999999 }
+    development: {
+      host: '127.0.0.1',
+      port: 8545,
+      network_id: '*'
+    }
     // ropsten: {
     //   network_id: 3,
     //   provider: engineRopsten,
