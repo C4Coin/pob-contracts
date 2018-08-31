@@ -26,15 +26,23 @@ import './libraries/Fts.sol';
 
 // @title Contract for public validators that wraps the stake bank used by public stakers
 contract PublicSet is SystemValidatorSet {
+    event Withdraw(address addr);
+
     IPublicStakeBank private publicStakeBank = PublicStakeBankSingleton.instance();
 
     uint internal constant maxValidators = 20;
 
-    address[] private validatorsList;
+    struct Validator {
+        uint256 start_dynasty;
+        uint256 end_dynasty;
+        address addr;
+    };
+
+    Validator[] private validators;
 
     /// Get current validator set (last enacted or initial if no changes ever made)
     function getValidators() public constant returns (address[]) {
-        return validatorsList;
+        return validators;
     }
 
     /// Called when an initiated change reaches finality and is activated.
@@ -51,14 +59,28 @@ contract PublicSet is SystemValidatorSet {
             stakerIndices[i] = stakerIndices[i] + stakerIndices[i-1];
         }
         uint256 totalCoins = publicStakeBank.totalStaked(); // TODO: maybe use totalStakedAt(block.number)?
-        validatorsList = Fts.fts(seed, stakerIds, stakerIndices, totalCoins, maxValidators);
+        validators = Fts.fts(seed, stakerIds, stakerIndices, totalCoins, maxValidators);
 
         // TODO: Is this where we burn?
 
         /* publicStakeBank.unlock(); */
 
         finalized=true;
-        emit ChangeFinalized(validatorsList);
+        emit ChangeFinalized(validators);
+    }
+
+    function withdraw(uint256 validatorIndex) public {
+        // Only self-removal
+        address valAddr = validators[ validatorIndex ].addr;
+        require(valAddr == msg.sender);
+
+        // Remove validator by swapping last in list
+        address lastValidator        = validators[ validators.length-1 ];
+        validators[ validatorIndex ] = lastValidator;
+        //delete validators[lastValidator]; // Remove duplicate
+        validators.length--;
+
+        emit Withdraw(valAddr);
     }
 
     function isInValidatorSet(address validator) public view returns (bool) {
