@@ -20,7 +20,9 @@ pragma solidity ^0.4.24;
 
 import './interfaces/SystemValidatorSet.sol';
 import './ConsortiumSetSingleton.sol';
-import './PublicSetSingleton.sol';
+import './PublicSet.sol';
+import './TokenRegistry.sol';
+//import './PublicSetSingleton.sol';
 import './ChainSpec.sol';
 
 
@@ -28,19 +30,23 @@ import './ChainSpec.sol';
 // @notice Committees change every dynasty
 contract CommitteeSet is SystemValidatorSet {
     SystemValidatorSet private consortiumSet;
-    SystemValidatorSet private publicSet = PublicSetSingleton.instance();
+    SystemValidatorSet private publicSet;// = PublicSetSingleton.instance();
 
     address[] private validatorsList;
 
     uint256 internal constant maxValidators = 80;
     uint256 consortiumToPublicRatio = 3;
 
-    constructor (address[] initialConsortium, address _owner) {
+    constructor (address[] initialConsortium, address _owner, TokenRegistry tr, uint256 _minStake, uint256 _unstakeDelay) {
         // Generate a new consortium set or use the chain spec
-        if (ChainSpec.isEnabled())
+        if (ChainSpec.isEnabled()) {
             consortiumSet = ConsortiumSet( ChainSpec.addrOf(keccak256('ConsortiumSet')) );
-        else
+            publicSet     = PublicSet( ChainSpec.addrOf(keccak256('PublicSet')) );
+        }
+        else {
             consortiumSet = new ConsortiumSet(initialConsortium, _owner);
+            publicSet     = new PublicSet(tr, _minStake, _unstakeDelay);
+        }
 
     }
 

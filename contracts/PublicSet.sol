@@ -20,15 +20,17 @@ pragma solidity ^0.4.24;
 
 import './interfaces/SystemValidatorSet.sol';
 import './interfaces/IPublicStakeBank.sol';
-import './PublicStakeBankSingleton.sol';
+//import './PublicStakeBankSingleton.sol';
+import './PublicStakeBank.sol';
 import './libraries/Fts.sol';
+import './TokenRegistry.sol';
 
 
 // @title Contract for public validators that wraps the stake bank used by public stakers
 contract PublicSet is SystemValidatorSet {
     event Withdraw(address addr);
 
-    IPublicStakeBank private publicStakeBank = PublicStakeBankSingleton.instance();
+    IPublicStakeBank private publicStakeBank;
 
     uint internal constant maxValidators = 20;
 
@@ -43,6 +45,10 @@ contract PublicSet is SystemValidatorSet {
     address[] private selectedValidators;
     uint256[] private dynastyCheckpoints;
     mapping(address => Validator) validatorInfo;
+
+    constructor(TokenRegistry tr, uint256 _minStake, uint256 _unstakeDelay) {
+        publicStakeBank = new PublicStakeBank(tr, _minStake, _unstakeDelay);
+    }
 
     /// Get current validator set (last enacted or initial if no changes ever made)
     function getValidators() public constant returns (address[]) {
