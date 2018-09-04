@@ -32,17 +32,26 @@ contract PublicSet is SystemValidatorSet {
 
     uint internal constant maxValidators = 20;
 
-    struct Validator {
-        uint256 start_dynasty;
-        uint256 end_dynasty;
-        address addr;
-    };
+    uint256 curDynasty = 0;
 
-    Validator[] private validators;
+    struct Validator {
+        uint256 startDynasty;
+        uint256 endDynasty;
+    }
+
+    address[] private availValidators;
+    address[] private selectedValidators;
+    uint256[] private dynastyCheckpoints;
+    mapping(address => Validator) validatorInfo;
 
     /// Get current validator set (last enacted or initial if no changes ever made)
     function getValidators() public constant returns (address[]) {
-        return validators;
+        return selectedValidators;
+    }
+
+    function incrementDynasty() {
+        require( block.number > (dynastyCheckpoints[ dynastyCheckpoints.length-1 ] + dynastyInterval) );
+        curDynasty++;
     }
 
     /// Called when an initiated change reaches finality and is activated.
@@ -59,28 +68,41 @@ contract PublicSet is SystemValidatorSet {
             stakerIndices[i] = stakerIndices[i] + stakerIndices[i-1];
         }
         uint256 totalCoins = publicStakeBank.totalStaked(); // TODO: maybe use totalStakedAt(block.number)?
-        validators = Fts.fts(seed, stakerIds, stakerIndices, totalCoins, maxValidators);
+        //selectedValidators = Fts.fts(seed, stakerIds, stakerIndices, totalCoins, maxValidators);
 
         // TODO: Is this where we burn?
 
         /* publicStakeBank.unlock(); */
 
         finalized=true;
-        emit ChangeFinalized(validators);
+        emit ChangeFinalized(selectedValidators);
     }
 
     function withdraw(uint256 validatorIndex) public {
         // Only self-removal
-        address valAddr = validators[ validatorIndex ].addr;
+        address valAddr = availValidators[ validatorIndex ];
         require(valAddr == msg.sender);
 
         // Remove validator by swapping last in list
-        address lastValidator        = validators[ validators.length-1 ];
-        validators[ validatorIndex ] = lastValidator;
+        //Validator storage lastValidator   = validatorInfo[ availValidators[availValidators.length-1] ];
+        address lastValidator   = availValidators[availValidators.length-1];
+        availValidators[ validatorIndex ] = lastValidator;
         //delete validators[lastValidator]; // Remove duplicate
-        validators.length--;
+        availValidators.length--;
 
         emit Withdraw(valAddr);
+    }
+
+    function deposit(uint256 amount, bytes tokenId) {
+        publicStakeBank.stakeFor(msg.sender, amount, tokenId);
+
+        // Add validator to records
+        availValidators.push( msg.sender );
+
+        validatorInfo[ msg.sender ] = Validator({
+            startDynasty: curDynasty,
+            endDynasty: 1000000000000 // Change this to uint256 max
+        });
     }
 
     function isInValidatorSet(address validator) public view returns (bool) {
