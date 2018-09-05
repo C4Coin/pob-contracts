@@ -22,7 +22,7 @@ import './interfaces/SystemValidatorSet.sol';
 import './interfaces/IPublicStakeBank.sol';
 //import './PublicStakeBankSingleton.sol';
 import './PublicStakeBank.sol';
-import './libraries/Fts.sol';
+//import './libraries/Fts.sol';
 import './TokenRegistry.sol';
 
 
@@ -53,6 +53,10 @@ contract PublicSet is SystemValidatorSet {
     /// Get current validator set (last enacted or initial if no changes ever made)
     function getValidators() public constant returns (address[]) {
         return selectedValidators;
+    }
+
+    function getStakeBankAddr () public view returns (address) {
+        return publicStakeBank;
     }
 
     function incrementDynasty() {
@@ -99,7 +103,7 @@ contract PublicSet is SystemValidatorSet {
         emit Withdraw(valAddr);
     }
 
-    function deposit(uint256 amount, bytes tokenId) {
+    function deposit(uint256 amount, bytes tokenId) public {
         publicStakeBank.stakeFor(msg.sender, amount, tokenId);
 
         // Add validator to records

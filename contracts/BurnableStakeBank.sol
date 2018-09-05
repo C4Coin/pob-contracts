@@ -78,7 +78,7 @@ contract BurnableStakeBank is Lockable {
         require( tokenRegistry.contains(tokenId));
         IBurnableERC20 token = IBurnableERC20( tokenRegistry.getAddress(tokenId) );
 
-        require(token.transferFrom(msg.sender, address(this), amount));
+        require(token.transferFrom(user, address(this), amount));
     }
 
     /**

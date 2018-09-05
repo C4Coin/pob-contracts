@@ -20,7 +20,7 @@ contract('PublicSet Unit Tests', accounts => {
     await co2knlist.setToken(tokenId, hytchToken.address, { from: validator })
 
     //av = await AddressVotes.new()
-    //set = await PublicSet.new(co2knlist, 0, 0)
+    set = await PublicSet.new(co2knlist.address, 1, 1)
   })
 
   /*
@@ -34,6 +34,16 @@ contract('PublicSet Unit Tests', accounts => {
   */
 
   it('Should deposit and withdraw tokens', async () => {
-    //set.deposit(100, tokenId, { from:accounts[1] })
+    // Mint tokens and enable staking
+    await hytchToken.mint(accounts[1], 1000, { from: validator })
+    await hytchToken.approve(await set.getStakeBankAddr(), 1000, {
+      from: accounts[1]
+    })
+
+    // Join public set and stake 100 tokens
+    await set.deposit(100, tokenId, { from: accounts[1] })
+
+    let x = await set.isInValidatorSet(accounts[1])
+    assert.equal(x, true)
   })
 })
