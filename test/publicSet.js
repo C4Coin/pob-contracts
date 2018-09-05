@@ -43,6 +43,7 @@ contract('PublicSet Unit Tests', accounts => {
     // Join public set and stake 100 tokens
     await set.deposit(100, tokenId, { from: accounts[1] })
 
+    // Check that it joined the set
     let x = await set.isInValidatorSet(accounts[1])
     assert.equal(x, true)
   })

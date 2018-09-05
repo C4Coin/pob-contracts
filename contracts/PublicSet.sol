@@ -39,6 +39,7 @@ contract PublicSet is SystemValidatorSet {
     struct Validator {
         uint256 startDynasty;
         uint256 endDynasty;
+        bool exists; // This is good practice in solidity because the language sucks
     }
 
     address[] private availValidators;
@@ -111,13 +112,17 @@ contract PublicSet is SystemValidatorSet {
 
         validatorInfo[ msg.sender ] = Validator({
             startDynasty: curDynasty,
-            endDynasty: 1000000000000 // Change this to uint256 max
+            endDynasty: 1000000000000, // Change this to uint256 max
+            exists: true
         });
     }
 
     function isInValidatorSet(address validator) public view returns (bool) {
-        // TODO
-        return false;
+        // Check val info for efficiency
+        Validator storage v = validatorInfo[ validator ];
+
+        if ( v.exists ) return true;
+        else return false;
     }
 
     // Reporting functions: operate on current validator set.
