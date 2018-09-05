@@ -23,17 +23,7 @@ contract('PublicSet Unit Tests', accounts => {
     set = await PublicSet.new(co2knlist.address, 1, 1)
   })
 
-  /*
-  it('isInValidatorSet handles edge cases', async () => {
-    const val_list = await set.getValidators()
-    const res = await set.isInValidatorSet(val_list[0])
-    assert.equal(res, true)
-    const res2 = await set.isInValidatorSet('0x0')
-    assert.equal(res2, false)
-  })
-  */
-
-  it('Should deposit and withdraw tokens', async () => {
+  it('Should deposit validator', async () => {
     // Mint tokens and enable staking
     await hytchToken.mint(accounts[1], 1000, { from: validator })
     await hytchToken.approve(await set.getStakeBankAddr(), 1000, {
@@ -46,5 +36,26 @@ contract('PublicSet Unit Tests', accounts => {
     // Check that it joined the set
     let x = await set.isInValidatorSet(accounts[1])
     assert.equal(x, true)
+  })
+
+  it('Should deposit and withdraw validator', async () => {
+    // Mint tokens and enable staking
+    await hytchToken.mint(accounts[1], 1000, { from: validator })
+    await hytchToken.approve(await set.getStakeBankAddr(), 1000, {
+      from: accounts[1]
+    })
+
+    // Join public set and stake 100 tokens
+    await set.deposit(100, tokenId, { from: accounts[1] })
+
+    // Check that it joined the set
+    let x = await set.isInValidatorSet(accounts[1])
+    assert.equal(x, true)
+
+    await set.withdraw(0, { from: accounts[1] })
+
+    // Should no longer be in set
+    let y = await set.isInValidatorSet(accounts[1])
+    assert.equal(y, false)
   })
 })

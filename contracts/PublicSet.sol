@@ -29,6 +29,7 @@ import './TokenRegistry.sol';
 // @title Contract for public validators that wraps the stake bank used by public stakers
 contract PublicSet is SystemValidatorSet {
     event Withdraw(address addr);
+    event Deposit(address addr, uint256 index);
 
     IPublicStakeBank private publicStakeBank;
 
@@ -94,12 +95,19 @@ contract PublicSet is SystemValidatorSet {
         address valAddr = availValidators[ validatorIndex ];
         require(valAddr == msg.sender);
 
-        // Remove validator by swapping last in list
-        //Validator storage lastValidator   = validatorInfo[ availValidators[availValidators.length-1] ];
-        address lastValidator   = availValidators[availValidators.length-1];
-        availValidators[ validatorIndex ] = lastValidator;
-        //delete validators[lastValidator]; // Remove duplicate
-        availValidators.length--;
+        // Remove info record
+        delete validatorInfo[ valAddr ];
+
+        // Remove only validator in list
+        if (availValidators.length == 1) {
+            availValidators.length--;
+        }
+        else { // Remove validator by swapping last in list
+            address lastValidator   = availValidators[availValidators.length-1];
+            availValidators[ validatorIndex ] = lastValidator;
+            //delete validators[lastValidator]; // Remove duplicate
+            availValidators.length--;
+        }
 
         emit Withdraw(valAddr);
     }
@@ -108,13 +116,15 @@ contract PublicSet is SystemValidatorSet {
         publicStakeBank.stakeFor(msg.sender, amount, tokenId);
 
         // Add validator to records
-        availValidators.push( msg.sender );
+        uint256 newLength = availValidators.push( msg.sender );
 
         validatorInfo[ msg.sender ] = Validator({
             startDynasty: curDynasty,
             endDynasty: 1000000000000, // Change this to uint256 max
             exists: true
         });
+
+        emit Deposit(msg.sender, newLength-1);
     }
 
     function isInValidatorSet(address validator) public view returns (bool) {
