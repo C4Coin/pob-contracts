@@ -7,9 +7,10 @@ module.exports = deployer => {
   deployer.deploy(AddressVotes).then(() => {
     deployer.link(AddressVotes, ConsortiumSet)
     deployer.deploy(ConsortiumSet)
-    
-    deployer.deploy(Fts)
-    deployer.link(Fts, FtsAdapter)
-    deployer.deploy(FtsAdapter)
+
+    deployer.deploy(Fts).then(() => {
+      deployer.link(Fts, FtsAdapter)
+      deployer.deploy(FtsAdapter)
+    })
   })
 }
