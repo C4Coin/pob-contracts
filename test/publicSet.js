@@ -20,7 +20,7 @@ contract('PublicSet Unit Tests', accounts => {
     await co2knlist.setToken(tokenId, hytchToken.address, { from: validator })
 
     //av = await AddressVotes.new()
-    set = await PublicSet.new(co2knlist.address, 1, 1)
+    set = await PublicSet.new(co2knlist.address, 1, 1, test_system)
   })
 
   it('Should deposit validator', async () => {
@@ -57,5 +57,9 @@ contract('PublicSet Unit Tests', accounts => {
     // Should no longer be in set
     let y = await set.isInValidatorSet(accounts[1])
     assert.equal(y, false)
+  })
+
+  it('Finalize should choose a subset of validators', async () => {
+    //await set.finalizeChange(
   })
 })

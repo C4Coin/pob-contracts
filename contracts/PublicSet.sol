@@ -24,10 +24,11 @@ import './interfaces/IPublicStakeBank.sol';
 import './PublicStakeBank.sol';
 //import './libraries/Fts.sol';
 import './TokenRegistry.sol';
+import './interfaces/CustomOwnable.sol';
 
 
 // @title Contract for public validators that wraps the stake bank used by public stakers
-contract PublicSet is SystemValidatorSet {
+contract PublicSet is SystemValidatorSet, CustomOwnable {
     event Withdraw(address addr);
     event Deposit(address addr, uint256 index);
 
@@ -48,7 +49,15 @@ contract PublicSet is SystemValidatorSet {
     uint256[] private dynastyCheckpoints;
     mapping(address => Validator) validatorInfo;
 
-    constructor(TokenRegistry tr, uint256 _minStake, uint256 _unstakeDelay) {
+    constructor(
+        TokenRegistry tr,
+        uint256 _minStake,
+        uint256 _unstakeDelay,
+        address _owner
+    ) public CustomOwnable(_owner) {
+        // Owner should be system addr in deployment
+        //owner = msg.sender;
+
         publicStakeBank = new PublicStakeBank(tr, _minStake, _unstakeDelay);
     }
 
@@ -71,12 +80,13 @@ contract PublicSet is SystemValidatorSet {
     ///
     /// Also called when the contract is first enabled for consensus. In this case,
     /// the "change" finalized is the activation of the initial set.
-    function finalizeChange() public onlySystemAndNotFinalized {
+    function finalizeChange() public onlyOwner { //onlySystemAndNotFinalized {
+        require( !finalized );
         /* publicStakeBank.lock(); */
 
         var (stakerIds, balances) = publicStakeBank.totalBalances(); // can we do memory here?
         uint256[] memory stakerIndices = new uint256[](balances.length);
-        for ( uint256 i = 1; i < stakerIndices.length; i++) {
+        for (uint256 i = 1; i < stakerIndices.length; i++) {
             stakerIndices[i] = stakerIndices[i] + stakerIndices[i-1];
         }
         uint256 totalCoins = publicStakeBank.totalStaked(); // TODO: maybe use totalStakedAt(block.number)?
@@ -101,8 +111,8 @@ contract PublicSet is SystemValidatorSet {
         // Remove only validator in list
         if (availValidators.length == 1) {
             availValidators.length--;
-        }
-        else { // Remove validator by swapping last in list
+        } else {
+            // Remove validator by swapping last in list
             address lastValidator   = availValidators[availValidators.length-1];
             availValidators[ validatorIndex ] = lastValidator;
             //delete validators[lastValidator]; // Remove duplicate

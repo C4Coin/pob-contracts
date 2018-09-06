@@ -28,6 +28,9 @@ import './TokenRegistry.sol';
  * @notice Used to set values for delay and also used by public validator contract for burning.
  */
 contract PublicStakeBank is IPublicStakeBank, DelayedStakeBank {
-    constructor(TokenRegistry tr, uint256 _minStake, uint256 _unstakeDelay) public DelayedStakeBank(tr, _minStake, _unstakeDelay) {
+    constructor(
+        TokenRegistry tr,
+        uint256 _minStake,
+        uint256 _unstakeDelay)public DelayedStakeBank(tr, _minStake, _unstakeDelay) {
     }
 }

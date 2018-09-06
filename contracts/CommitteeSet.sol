@@ -37,15 +37,19 @@ contract CommitteeSet is SystemValidatorSet {
     uint256 internal constant maxValidators = 80;
     uint256 consortiumToPublicRatio = 3;
 
-    constructor (address[] initialConsortium, address _owner, TokenRegistry tr, uint256 _minStake, uint256 _unstakeDelay) {
+    constructor (
+        address[] initialConsortium,
+        address _owner,
+        TokenRegistry tr,
+        uint256 _minStake,
+        uint256 _unstakeDelay) {
         // Generate a new consortium set or use the chain spec
         if (ChainSpec.isEnabled()) {
             consortiumSet = ConsortiumSet( ChainSpec.addrOf(keccak256('ConsortiumSet')) );
             publicSet     = PublicSet( ChainSpec.addrOf(keccak256('PublicSet')) );
-        }
-        else {
+        } else {
             consortiumSet = new ConsortiumSet(initialConsortium, _owner);
-            publicSet     = new PublicSet(tr, _minStake, _unstakeDelay);
+            publicSet     = new PublicSet(tr, _minStake, _unstakeDelay, _owner);
         }
 
     }
@@ -75,7 +79,7 @@ contract CommitteeSet is SystemValidatorSet {
             if (publicList.length * consortiumToPublicRatio >= consortiumList.length) {
                 // Calculate how many more consortium members we need
                 uint256 deltaConsortium = publicList.length * consortiumToPublicRatio - consortiumList.length;
-                for( i=0; i < deltaConsortium; i++) {
+                for ( i=0; i < deltaConsortium; i++) {
                     /* consortiumList.push(consortiumList[i]);  */
                 }
             }
@@ -111,7 +115,7 @@ contract CommitteeSet is SystemValidatorSet {
         } else if (publicSet.isInValidatorSet(validator)) {
             publicSet.reportBenign(validator, blockNumber);
         } else {
-            emit SystemValidatorError("reportBenign given invalid address");
+            emit SystemValidatorError('reportBenign given invalid address');
         }
     }
 
@@ -121,7 +125,7 @@ contract CommitteeSet is SystemValidatorSet {
         } else if (publicSet.isInValidatorSet(validator)) {
             publicSet.reportMalicious(validator, blockNumber, proof);
         } else {
-            emit SystemValidatorError("reportMalicious given invalid address");
+            emit SystemValidatorError('reportMalicious given invalid address');
         }
     }
 }
