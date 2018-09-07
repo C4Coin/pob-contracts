@@ -14,7 +14,7 @@ contract('PublicSet Unit Tests', accounts => {
 
   beforeEach(async () => {
     // Create sample Hytch co2kn
-    hytchToken = await BurnableERC20.new(1000, { from: validator })
+    hytchToken = await BurnableERC20.new(10000, { from: validator })
 
     // Create co2kn whitelist and add hytch token
     co2knlist = await TokenRegistry.new({ from: validator })
@@ -63,7 +63,16 @@ contract('PublicSet Unit Tests', accounts => {
   })
 
   it('Finalize should choose a subset of validators', async () => {
+    // Mint tokens and join public set
+    for (let i = 1; i < 8; i++) {
+      await hytchToken.mint(accounts[i], 100, { from: validator })
+      await hytchToken.approve(await set.getStakeBankAddr(), 100, {
+        from: accounts[i]
+      })
+      await set.deposit(100, tokenId, { from: accounts[i] })
+    }
+
     await set.finalizeChange({ from: test_system })
-    //assert.equal(false, true)
+    assert.equal(false, true)
   })
 })

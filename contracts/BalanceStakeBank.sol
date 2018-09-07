@@ -131,10 +131,10 @@ contract BalanceStakeBank is BurnableStakeBank {
         // First elem is 0 for FTS lib
         amounts[0]  = 0;
 
-        for (uint i=1; i < numStakers; i++) {
+        for (uint i=0; i < numStakers; i++) {
             stakers[i] = stakeNodes[current].data.staker;
             acc += stakeNodes[current].data.amount;
-            amounts[i] = acc;
+            amounts[i+1] = acc;
             //amounts[i] = stakeNodes[current].data.amount;
             current = stakeNodes[current].next;
         }

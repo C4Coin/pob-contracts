@@ -32,6 +32,9 @@ contract PublicSet is SystemValidatorSet, CustomOwnable {
     event Withdraw(address addr);
     event Deposit(address addr, uint256 index);
 
+    event Debug1(address[] a);
+    event Debug2(uint[] u);
+
     IPublicStakeBank private publicStakeBank;
 
     uint internal constant maxValidators = 20;
@@ -93,10 +96,9 @@ contract PublicSet is SystemValidatorSet, CustomOwnable {
         }
         uint256 totalCoins = publicStakeBank.totalStaked(); // TODO: maybe use totalStakedAt(block.number)?
 
-        if ( availValidators.length > maxValidators )
-            selectedValidators = Fts.fts(_seed, stakerIds, stakerIndices, totalCoins, maxValidators);
-        else
-            selectedValidators = availValidators;
+        Debug1(stakerIds);
+        Debug2(balances);
+        selectedValidators = Fts.fts(_seed, stakerIds, balances, totalCoins, maxValidators);
 
         // TODO: Is this where we burn?
 
