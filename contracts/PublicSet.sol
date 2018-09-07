@@ -22,7 +22,7 @@ import './interfaces/SystemValidatorSet.sol';
 import './interfaces/IPublicStakeBank.sol';
 //import './PublicStakeBankSingleton.sol';
 import './PublicStakeBank.sol';
-//import './libraries/Fts.sol';
+import './libraries/Fts.sol';
 import './TokenRegistry.sol';
 import './interfaces/CustomOwnable.sol';
 
@@ -80,17 +80,23 @@ contract PublicSet is SystemValidatorSet, CustomOwnable {
     ///
     /// Also called when the contract is first enabled for consensus. In this case,
     /// the "change" finalized is the activation of the initial set.
+    //function finalizeChange(bytes32 _seed) public onlyOwner { //onlySystemAndNotFinalized {
     function finalizeChange() public onlyOwner { //onlySystemAndNotFinalized {
         require( !finalized );
+        bytes32 _seed = '0x0123';
         /* publicStakeBank.lock(); */
 
         var (stakerIds, balances) = publicStakeBank.totalBalances(); // can we do memory here?
-        uint256[] memory stakerIndices = new uint256[](balances.length);
+        uint256[] memory stakerIndices = new uint256[](stakerIds.length);
         for (uint256 i = 1; i < stakerIndices.length; i++) {
             stakerIndices[i] = stakerIndices[i] + stakerIndices[i-1];
         }
         uint256 totalCoins = publicStakeBank.totalStaked(); // TODO: maybe use totalStakedAt(block.number)?
-        //selectedValidators = Fts.fts(seed, stakerIds, stakerIndices, totalCoins, maxValidators);
+
+        if ( availValidators.length > maxValidators )
+            selectedValidators = Fts.fts(_seed, stakerIds, stakerIndices, totalCoins, maxValidators);
+        else
+            selectedValidators = availValidators;
 
         // TODO: Is this where we burn?
 

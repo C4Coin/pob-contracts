@@ -1,12 +1,13 @@
 const PublicSet = artifacts.require('PublicSet')
 //const AddressVotes = artifacts.require('AddressVotes')
 const PublicStakeBank = artifacts.require('PublicStakeBank')
+const Fts = artifacts.require('Fts')
 
 const TokenRegistry = artifacts.require('TokenRegistry')
 const BurnableERC20 = artifacts.require('BurnableERC20')
 
 contract('PublicSet Unit Tests', accounts => {
-  let set
+  let set, fts
   const validator = accounts[0]
   const test_system = accounts[9]
   const tokenId = 'Test'
@@ -20,6 +21,8 @@ contract('PublicSet Unit Tests', accounts => {
     await co2knlist.setToken(tokenId, hytchToken.address, { from: validator })
 
     //av = await AddressVotes.new()
+    fts = await Fts.new()
+    await PublicSet.link('Fts', fts.address)
     set = await PublicSet.new(co2knlist.address, 1, 1, test_system)
   })
 
@@ -60,6 +63,7 @@ contract('PublicSet Unit Tests', accounts => {
   })
 
   it('Finalize should choose a subset of validators', async () => {
-    //await set.finalizeChange(
+    await set.finalizeChange({ from: test_system })
+    //assert.equal(false, true)
   })
 })
