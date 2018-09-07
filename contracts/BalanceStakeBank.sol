@@ -106,21 +106,6 @@ contract BalanceStakeBank is BurnableStakeBank {
         emit Unstaked(msg.sender, amount, totalStakedFor(msg.sender), data);
     }
 
-    // @notice Retrieves balance for each staked address in stake nodes
-    /*
-    function totalBalances() public view returns (address[], uint[]) {
-        address[] memory stakers = new address[](numStakers);
-        uint[] memory amounts = new uint[](numStakers);
-        uint current = stakeNodes[0].next;
-        for (uint i; i < numStakers; i++) {
-            stakers[i] = stakeNodes[current].data.staker;
-            amounts[i] = stakeNodes[current].data.amount;
-            current = stakeNodes[current].next;
-        }
-        return (stakers, amounts);
-    }
-    */
-
     // @notice Retrieves accumulated balance for each staked address in stake nodes
     function totalBalances() public view returns (address[], uint[]) {
         address[] memory stakers = new address[](numStakers);
@@ -135,7 +120,6 @@ contract BalanceStakeBank is BurnableStakeBank {
             stakers[i] = stakeNodes[current].data.staker;
             acc += stakeNodes[current].data.amount;
             amounts[i+1] = acc;
-            //amounts[i] = stakeNodes[current].data.amount;
             current = stakeNodes[current].next;
         }
         return (stakers, amounts);

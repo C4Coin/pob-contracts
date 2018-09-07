@@ -72,7 +72,32 @@ contract('PublicSet Unit Tests', accounts => {
       await set.deposit(100, tokenId, { from: accounts[i] })
     }
 
-    await set.finalizeChange({ from: test_system })
-    assert.equal(false, true)
+    let x = await set.finalizeChange({ from: test_system })
+
+    let res = x.logs[x.logs.length - 1].args.current_set
+    // Result from the seed 0x123
+    let ans = [
+      '0x12573c5a3601d1802b0a8a370583896a104c69c9',
+      '0x74dffa4d2aa00f05b5cf757fbda4eaee5cced24a',
+      '0xa704385c206afeb1956e1b58ff3c2f5bdfbc20b3',
+      '0x74dffa4d2aa00f05b5cf757fbda4eaee5cced24a',
+      '0x7dddd3c8bbbcbcd658d3175fa0e9d21f0a01d353',
+      '0x12573c5a3601d1802b0a8a370583896a104c69c9',
+      '0x12573c5a3601d1802b0a8a370583896a104c69c9',
+      '0xa704385c206afeb1956e1b58ff3c2f5bdfbc20b3',
+      '0xa61dea7e0bc66f88fa2c6f6bf0ff17008b8050ad',
+      '0xa61dea7e0bc66f88fa2c6f6bf0ff17008b8050ad',
+      '0xb6bb125bb669806db1916ee04c6c5b65ca417398',
+      '0x45f358d4f49b45e445426ce0422e38c524d7d6f0',
+      '0x74dffa4d2aa00f05b5cf757fbda4eaee5cced24a',
+      '0x7dddd3c8bbbcbcd658d3175fa0e9d21f0a01d353',
+      '0x45f358d4f49b45e445426ce0422e38c524d7d6f0',
+      '0xa61dea7e0bc66f88fa2c6f6bf0ff17008b8050ad',
+      '0x74dffa4d2aa00f05b5cf757fbda4eaee5cced24a',
+      '0xb6bb125bb669806db1916ee04c6c5b65ca417398',
+      '0x12573c5a3601d1802b0a8a370583896a104c69c9',
+      '0x12573c5a3601d1802b0a8a370583896a104c69c9'
+    ]
+    assert.deepEqual(res, ans)
   })
 })
