@@ -107,6 +107,7 @@ contract BalanceStakeBank is BurnableStakeBank {
     }
 
     // @notice Retrieves balance for each staked address in stake nodes
+    /*
     function totalBalances() public view returns (address[], uint[]) {
         address[] memory stakers = new address[](numStakers);
         uint[] memory amounts = new uint[](numStakers);
@@ -114,6 +115,27 @@ contract BalanceStakeBank is BurnableStakeBank {
         for (uint i; i < numStakers; i++) {
             stakers[i] = stakeNodes[current].data.staker;
             amounts[i] = stakeNodes[current].data.amount;
+            current = stakeNodes[current].next;
+        }
+        return (stakers, amounts);
+    }
+    */
+
+    // @notice Retrieves accumulated balance for each staked address in stake nodes
+    function totalBalances() public view returns (address[], uint[]) {
+        address[] memory stakers = new address[](numStakers);
+        uint[] memory amounts = new uint[](numStakers+1);
+        uint current = stakeNodes[0].next;
+
+        uint256 acc = 0;
+        // First elem is 0 for FTS lib
+        amounts[0]  = 0;
+
+        for (uint i=1; i < numStakers; i++) {
+            stakers[i] = stakeNodes[current].data.staker;
+            acc += stakeNodes[current].data.amount;
+            amounts[i] = acc;
+            //amounts[i] = stakeNodes[current].data.amount;
             current = stakeNodes[current].next;
         }
         return (stakers, amounts);
