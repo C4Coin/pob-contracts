@@ -55,7 +55,7 @@ contract DelayedStakeBank is BalanceStakeBank {
      * @param data Data field used for signalling in more complex staking applications.
      */
     function stakeFor(address user, uint256 amount, bytes data) public {
-        require(user == msg.sender);
+        //require(user == msg.sender);
         lastStaked[msg.sender] = block.number;
         BalanceStakeBank.stakeFor(user, amount, data);
     }

@@ -20,21 +20,57 @@ pragma solidity ^0.4.24;
 
 import './interfaces/SystemValidatorSet.sol';
 import './interfaces/IPublicStakeBank.sol';
-import './PublicStakeBankSingleton.sol';
+//import './PublicStakeBankSingleton.sol';
+import './PublicStakeBank.sol';
 import './libraries/Fts.sol';
+import './TokenRegistry.sol';
+import './interfaces/CustomOwnable.sol';
 
 
 // @title Contract for public validators that wraps the stake bank used by public stakers
-contract PublicSet is SystemValidatorSet {
-    IPublicStakeBank private publicStakeBank = PublicStakeBankSingleton.instance();
+contract PublicSet is SystemValidatorSet, CustomOwnable {
+    event Withdraw(address addr);
+    event Deposit(address addr, uint256 index);
+
+    IPublicStakeBank private publicStakeBank;
 
     uint internal constant maxValidators = 20;
 
-    address[] private validatorsList;
+    uint256 curDynasty = 0;
+
+    struct Validator {
+        uint256 startDynasty;
+        uint256 endDynasty;
+        bool exists; // This is good practice in solidity because the language sucks
+    }
+
+    address[] private availValidators;
+    address[] private selectedValidators;
+    uint256[] private dynastyCheckpoints;
+    mapping(address => Validator) validatorInfo;
+
+    constructor(
+        TokenRegistry tr,
+        uint256 _minStake,
+        uint256 _unstakeDelay,
+        address _owner
+    ) public CustomOwnable(_owner) {
+
+        publicStakeBank = new PublicStakeBank(tr, _minStake, _unstakeDelay);
+    }
 
     /// Get current validator set (last enacted or initial if no changes ever made)
     function getValidators() public constant returns (address[]) {
-        return validatorsList;
+        return selectedValidators;
+    }
+
+    function getStakeBankAddr () public view returns (address) {
+        return publicStakeBank;
+    }
+
+    function incrementDynasty() {
+        require( block.number > (dynastyCheckpoints[ dynastyCheckpoints.length-1 ] + dynastyInterval) );
+        curDynasty++;
     }
 
     /// Called when an initiated change reaches finality and is activated.
@@ -42,28 +78,72 @@ contract PublicSet is SystemValidatorSet {
     ///
     /// Also called when the contract is first enabled for consensus. In this case,
     /// the "change" finalized is the activation of the initial set.
-    function finalizeChange() public onlySystemAndNotFinalized {
+    //function finalizeChange(bytes32 _seed) public onlyOwner { //onlySystemAndNotFinalized {
+    function finalizeChange() public onlyOwner { //onlySystemAndNotFinalized {
+        require( !finalized );
+        bytes32 _seed = '0x0123';
         /* publicStakeBank.lock(); */
 
         var (stakerIds, balances) = publicStakeBank.totalBalances(); // can we do memory here?
-        uint256[] memory stakerIndices = new uint256[](balances.length);
-        for ( uint256 i = 1; i < stakerIndices.length; i++) {
+        uint256[] memory stakerIndices = new uint256[](stakerIds.length);
+        for (uint256 i = 1; i < stakerIndices.length; i++) {
             stakerIndices[i] = stakerIndices[i] + stakerIndices[i-1];
         }
         uint256 totalCoins = publicStakeBank.totalStaked(); // TODO: maybe use totalStakedAt(block.number)?
-        validatorsList = Fts.fts(seed, stakerIds, stakerIndices, totalCoins, maxValidators);
+
+        selectedValidators = Fts.fts(_seed, stakerIds, balances, totalCoins, maxValidators);
 
         // TODO: Is this where we burn?
 
         /* publicStakeBank.unlock(); */
 
         finalized=true;
-        emit ChangeFinalized(validatorsList);
+        emit ChangeFinalized(selectedValidators);
+    }
+
+    function withdraw(uint256 validatorIndex) public {
+        // Only self-removal
+        address valAddr = availValidators[ validatorIndex ];
+        require(valAddr == msg.sender);
+
+        // Remove info record
+        delete validatorInfo[ valAddr ];
+
+        // Remove only validator in list
+        if (availValidators.length == 1) {
+            availValidators.length--;
+        } else {
+            // Remove validator by swapping last in list
+            address lastValidator   = availValidators[availValidators.length-1];
+            availValidators[ validatorIndex ] = lastValidator;
+            //delete validators[lastValidator]; // Remove duplicate
+            availValidators.length--;
+        }
+
+        emit Withdraw(valAddr);
+    }
+
+    function deposit(uint256 amount, bytes tokenId) public {
+        publicStakeBank.stakeFor(msg.sender, amount, tokenId);
+
+        // Add validator to records
+        uint256 newLength = availValidators.push( msg.sender );
+
+        validatorInfo[ msg.sender ] = Validator({
+            startDynasty: curDynasty,
+            endDynasty: 1000000000000, // Change this to uint256 max
+            exists: true
+        });
+
+        emit Deposit(msg.sender, newLength-1);
     }
 
     function isInValidatorSet(address validator) public view returns (bool) {
-        // TODO
-        return false;
+        // Check val info for efficiency
+        Validator storage v = validatorInfo[ validator ];
+
+        if (v.exists) return true;
+        else return false;
     }
 
     // Reporting functions: operate on current validator set.
