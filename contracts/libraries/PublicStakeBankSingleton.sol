@@ -17,10 +17,23 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 pragma solidity ^0.4.24;
 
-import './TokenRegistry.sol';
 
-library TokenRegistrySingleton {
-    function instance() public returns (TokenRegistry) {
-        return new TokenRegistry();
+import './../PublicStakeBank.sol';
+import './../TokenRegistry.sol';
+import './TokenRegistrySingleton.sol';
+
+/**
+ * @title Library to access singleton stake bank instance
+ */
+library PublicStakeBankSingleton {
+    TokenRegistry private constant _tokenRegistry = TokenRegistrySingleton.instance();
+    PublicStakeBank private constant _publicStakeBank = new PublicStakeBank(
+        TokenRegistrySingleton.instance(),
+        1000,
+        360
+        );
+
+    function instance() public constant returns (PublicStakeBank) {
+        return _publicStakeBank;
     }
 }

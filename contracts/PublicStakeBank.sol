@@ -20,7 +20,6 @@ pragma solidity ^0.4.24;
 
 import './interfaces/IPublicStakeBank.sol';
 import './DelayedStakeBank.sol';
-import './TokenRegistrySingleton.sol';
 import './TokenRegistry.sol';
 
 /**
@@ -31,6 +30,6 @@ contract PublicStakeBank is IPublicStakeBank, DelayedStakeBank {
     constructor(
         TokenRegistry tr,
         uint256 _minStake,
-        uint256 _unstakeDelay)public DelayedStakeBank(tr, _minStake, _unstakeDelay) {
+        uint256 _unstakeDelay) public DelayedStakeBank(tr, _minStake, _unstakeDelay) {
     }
 }

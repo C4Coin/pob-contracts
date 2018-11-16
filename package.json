@@ -61,7 +61,7 @@
   },
   "homepage": "https://github.com/c4coin/PoB-contracts#readme",
   "dependencies": {
-    "npm": "^6.2.0",
+    "npm": "^6.4.1",
     "openzeppelin-solidity": "1.9.0"
   }
 }

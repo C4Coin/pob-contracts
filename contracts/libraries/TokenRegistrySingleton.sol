@@ -17,11 +17,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 pragma solidity ^0.4.24;
 
+import './../TokenRegistry.sol';
 
-// @title Contract template is consumed by generator CLI to populate reserved peers
-contract InitialConsortiumSet {
-    // Pending list of validator addresses.
-    address[] pendingList = [
-        {{initialReservedPeers}}
-    ];
+library TokenRegistrySingleton {
+    TokenRegistry private constant _tokenRegistry = new TokenRegistry();
+
+    function instance() public returns (TokenRegistry) {
+        return _tokenRegistry;
+    }
 }
